@@ -1,9 +1,24 @@
 import axios from 'axios'
-import { DEFAULT_API_URL, STORAGE_KEYS } from '../config/app'
+import { DEFAULT_API_URL, STORAGE_KEYS, normalizeApiUrl } from '../config/app'
 import { authSession } from './session'
 
 export function getApiUrl(): string {
-  return localStorage.getItem(STORAGE_KEYS.API_URL) || DEFAULT_API_URL
+  const stored = localStorage.getItem(STORAGE_KEYS.API_URL)
+  if (stored?.trim()) {
+    return normalizeApiUrl(stored)
+  }
+
+  // Dev: same-origin requests via Vite proxy (avoids CORS / ngrok browser issues)
+  if (import.meta.env.DEV) {
+    return ''
+  }
+
+  return normalizeApiUrl(DEFAULT_API_URL)
+}
+
+export function getResolvedApiUrl(): string {
+  const base = getApiUrl()
+  return base || normalizeApiUrl(import.meta.env.VITE_API_URL || DEFAULT_API_URL)
 }
 
 export const apiClient = axios.create({

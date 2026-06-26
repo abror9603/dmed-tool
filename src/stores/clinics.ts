@@ -6,6 +6,7 @@ import { getErrorMessage } from '../utils/errors'
 
 export const useClinicsStore = defineStore('clinics', () => {
   const clinics = ref<Awaited<ReturnType<typeof clinicsService.getAll>>>([])
+  const statusFilter = ref<'ACTIVE' | 'INACTIVE' | 'ALL'>('ALL')
   const loading = ref(false)
   const error = ref<string | null>(null)
   const successMessage = ref<string | null>(null)
@@ -16,12 +17,16 @@ export const useClinicsStore = defineStore('clinics', () => {
   }
 
   const fetchAllClinics = async (status?: 'ACTIVE' | 'INACTIVE' | 'ALL') => {
+    if (status) {
+      statusFilter.value = status
+    }
+
     loading.value = true
     error.value = null
     try {
       const data =
-        status === 'ACTIVE' || status === 'INACTIVE'
-          ? await clinicsService.getByStatus(status)
+        statusFilter.value === 'ACTIVE' || statusFilter.value === 'INACTIVE'
+          ? await clinicsService.getByStatus(statusFilter.value)
           : await clinicsService.getAll()
       clinics.value = Array.isArray(data) ? data : []
     } catch (err) {
@@ -38,7 +43,7 @@ export const useClinicsStore = defineStore('clinics', () => {
     try {
       await clinicsService.create(payload)
       successMessage.value = i18n.global.t('errors.clinicCreated')
-      await fetchAllClinics()
+      await fetchAllClinics(statusFilter.value)
     } catch (err) {
       error.value = getErrorMessage(err, i18n.global.t('errors.clinicCreate'))
       throw err
@@ -53,7 +58,7 @@ export const useClinicsStore = defineStore('clinics', () => {
     try {
       await clinicsService.update(id, payload)
       successMessage.value = i18n.global.t('errors.clinicUpdated')
-      await fetchAllClinics()
+      await fetchAllClinics(statusFilter.value)
     } catch (err) {
       error.value = getErrorMessage(err, i18n.global.t('errors.clinicUpdate'))
       throw err
@@ -68,7 +73,7 @@ export const useClinicsStore = defineStore('clinics', () => {
     try {
       await clinicsService.toggleStatus(id)
       successMessage.value = i18n.global.t('errors.statusUpdated')
-      await fetchAllClinics()
+      await fetchAllClinics(statusFilter.value)
     } catch (err) {
       error.value = getErrorMessage(err, i18n.global.t('errors.clinicStatus'))
       throw err
@@ -83,7 +88,7 @@ export const useClinicsStore = defineStore('clinics', () => {
     try {
       await clinicsService.delete(id)
       successMessage.value = i18n.global.t('errors.clinicDeleted')
-      await fetchAllClinics()
+      await fetchAllClinics(statusFilter.value)
     } catch (err) {
       error.value = getErrorMessage(err, i18n.global.t('errors.clinicDelete'))
       throw err
@@ -94,6 +99,7 @@ export const useClinicsStore = defineStore('clinics', () => {
 
   return {
     clinics,
+    statusFilter,
     loading,
     error,
     successMessage,

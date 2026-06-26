@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Activity, Key, Send } from 'lucide-vue-next'
+import { Activity, Key, Send, User, Stethoscope, FileText } from 'lucide-vue-next'
 import AdminAlerts from '../../components/admin/AdminAlerts.vue'
 import { medicalEventsService } from '../../services/medical-events'
 import { getErrorMessage } from '../../utils/errors'
@@ -9,13 +9,9 @@ import { getErrorMessage } from '../../utils/errors'
 const { t } = useI18n()
 
 const secretKey = ref('')
-const payloadText = ref(`{
-  "patientId": "12345",
-  "eventType": "DISCHARGE",
-  "dischargeDate": "2026-06-26",
-  "diagnosis": "I10",
-  "riskScore": 72
-}`)
+const jshshir = ref('')
+const diagnosis = ref('')
+const conclusion = ref('')
 const loading = ref(false)
 const error = ref<string | null>(null)
 const successMessage = ref<string | null>(null)
@@ -35,17 +31,21 @@ async function submitIntake(): Promise<void> {
     return
   }
 
-  let payload: unknown
-  try {
-    payload = JSON.parse(payloadText.value)
-  } catch {
-    error.value = t('medicalEvents.invalidJson')
+  if (!jshshir.value.trim() || !diagnosis.value.trim() || !conclusion.value.trim()) {
+    error.value = t('medicalEvents.fillRequired')
     return
   }
 
   loading.value = true
   try {
-    const data = await medicalEventsService.intake(payload, secretKey.value.trim())
+    const data = await medicalEventsService.intake(
+      {
+        jshshir: jshshir.value.trim(),
+        diagnosis: diagnosis.value.trim(),
+        conclusion: conclusion.value.trim(),
+      },
+      secretKey.value.trim(),
+    )
     successMessage.value = t('medicalEvents.success')
     responseText.value = JSON.stringify(data, null, 2)
   } catch (err) {
@@ -57,7 +57,7 @@ async function submitIntake(): Promise<void> {
 </script>
 
 <template>
-  <div class="mx-auto max-w-3xl space-y-6">
+  <div class="mx-auto min-w-0 max-w-3xl space-y-6">
     <AdminAlerts :error="error" :success="successMessage" />
 
     <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-brand-dark-card">
@@ -89,13 +89,52 @@ async function submitIntake(): Promise<void> {
 
         <div>
           <label class="mb-1 block text-[10px] font-bold uppercase tracking-wider text-slate-400">
-            {{ t('medicalEvents.payload') }}
+            {{ t('medicalEvents.jshshir') }} *
           </label>
-          <textarea
-            v-model="payloadText"
-            rows="12"
-            class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 font-mono text-xs leading-relaxed dark:border-slate-800 dark:bg-slate-900/60"
-          />
+          <div class="relative">
+            <User class="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+            <input
+              v-model="jshshir"
+              type="text"
+              required
+              inputmode="numeric"
+              maxlength="14"
+              :placeholder="t('medicalEvents.jshshirPlaceholder')"
+              class="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-xs dark:border-slate-800 dark:bg-slate-900/60"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label class="mb-1 block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+            {{ t('medicalEvents.diagnosis') }} *
+          </label>
+          <div class="relative">
+            <Stethoscope class="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+            <input
+              v-model="diagnosis"
+              type="text"
+              required
+              :placeholder="t('medicalEvents.diagnosisPlaceholder')"
+              class="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-xs dark:border-slate-800 dark:bg-slate-900/60"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label class="mb-1 block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+            {{ t('medicalEvents.conclusion') }} *
+          </label>
+          <div class="relative">
+            <FileText class="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+            <textarea
+              v-model="conclusion"
+              rows="4"
+              required
+              :placeholder="t('medicalEvents.conclusionPlaceholder')"
+              class="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-xs leading-relaxed dark:border-slate-800 dark:bg-slate-900/60"
+            />
+          </div>
         </div>
 
         <button

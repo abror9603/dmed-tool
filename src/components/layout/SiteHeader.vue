@@ -68,7 +68,7 @@ onMounted(() => {
         </button>
 
         <a
-          href="#how-it-works"
+          href="#clinic-registration"
           class="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold text-white bg-brand-primary hover:bg-brand-primary/95 rounded-lg shadow-sm hover:shadow transition-all duration-200 active:scale-95"
         >
           {{ t('common.getStarted') }}

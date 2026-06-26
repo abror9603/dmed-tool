@@ -7,3 +7,7 @@ export const STORAGE_KEYS = {
 } as const
 
 export const DEFAULT_API_URL = 'https://3ed4-185-139-137-95.ngrok-free.app'
+
+export function normalizeApiUrl(url: string): string {
+  return url.trim().replace(/\/$/, '')
+}

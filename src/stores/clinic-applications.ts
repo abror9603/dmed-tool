@@ -4,8 +4,9 @@ import { i18n } from '../i18n'
 import {
   clinicApplicationsService,
   type ApplicationStatus,
-  type ClinicApplicationPayload,
+  type ClinicApplicationApplyPayload,
 } from '../services/clinic-applications'
+import { useClinicsStore } from './clinics'
 import { getErrorMessage } from '../utils/errors'
 
 export const useClinicApplicationsStore = defineStore('clinicApplications', () => {
@@ -42,7 +43,7 @@ export const useClinicApplicationsStore = defineStore('clinicApplications', () =
     }
   }
 
-  async function submitApplication(payload: ClinicApplicationPayload): Promise<void> {
+  async function submitApplication(payload: ClinicApplicationApplyPayload): Promise<void> {
     loading.value = true
     error.value = null
     try {
@@ -61,9 +62,14 @@ export const useClinicApplicationsStore = defineStore('clinicApplications', () =
     loading.value = true
     error.value = null
     try {
-      await clinicApplicationsService.approve(id)
+      const application = applications.value.find((app) => String(app.id) === String(id))
+      if (!application) {
+        throw new Error(i18n.global.t('errors.applicationNotFound'))
+      }
+      await clinicApplicationsService.approveWithClinic(id, application)
       successMessage.value = i18n.global.t('errors.applicationApproved')
       await fetchApplications()
+      await useClinicsStore().fetchAllClinics()
     } catch (err) {
       error.value = getErrorMessage(err, i18n.global.t('errors.applicationApprove'))
       throw err

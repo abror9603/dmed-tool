@@ -1,22 +1,20 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import {
-  ClipboardList,
-  Check,
-  X,
-  MapPin,
-  Phone,
-  Mail,
-  User,
-  Hospital,
-} from 'lucide-vue-next'
+import { ClipboardList, Check, X, Phone, User, Calendar, Key } from 'lucide-vue-next'
 import AdminAlerts from '../../components/admin/AdminAlerts.vue'
 import AdminRefreshButton from '../../components/admin/AdminRefreshButton.vue'
+import { useAdminLabels } from '../../composables/useAdminLabels'
 import { useClinicApplicationsStore } from '../../stores/clinic-applications'
-import type { ApplicationStatus } from '../../services/clinic-applications'
+import {
+  formatApplicationDate,
+  getApplicationClinicName,
+  getApplicationContactName,
+  type ApplicationStatus,
+} from '../../services/clinic-applications'
 
 const { t } = useI18n()
+const { statusLabel } = useAdminLabels()
 const store = useClinicApplicationsStore()
 
 const applications = computed(() => store.applications)
@@ -29,12 +27,6 @@ const statusTabs = computed(() => [
   { value: 'REJECTED' as const, label: t('applications.filterRejected') },
 ])
 
-const formName = ref('')
-const formAddress = ref('')
-const formPhone = ref('')
-const formEmail = ref('')
-const formContact = ref('')
-
 async function refresh(): Promise<void> {
   store.clearMessages()
   await store.fetchApplications()
@@ -45,35 +37,14 @@ async function setFilter(status: ApplicationStatus | 'ALL'): Promise<void> {
   await store.fetchApplications(status)
 }
 
-async function approve(id: number): Promise<void> {
+async function approve(id: string | number): Promise<void> {
   if (!confirm(t('applications.confirmApprove'))) return
   await store.approveApplication(id)
 }
 
-async function reject(id: number): Promise<void> {
+async function reject(id: string | number): Promise<void> {
   if (!confirm(t('applications.confirmReject'))) return
   await store.rejectApplication(id)
-}
-
-async function submitApplication(): Promise<void> {
-  if (!formName.value || !formAddress.value || !formPhone.value || !formEmail.value) {
-    alert(t('clinics.fillAllFields'))
-    return
-  }
-
-  await store.submitApplication({
-    name: formName.value,
-    address: formAddress.value,
-    phone: formPhone.value,
-    email: formEmail.value,
-    contactPerson: formContact.value || undefined,
-  })
-
-  formName.value = ''
-  formAddress.value = ''
-  formPhone.value = ''
-  formEmail.value = ''
-  formContact.value = ''
 }
 
 function statusClass(status: ApplicationStatus): string {
@@ -92,7 +63,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="mx-auto max-w-7xl space-y-6">
+  <div class="w-full space-y-4">
     <AdminRefreshButton :loading="loading" @refresh="refresh" />
     <AdminAlerts :error="store.error" :success="store.successMessage" />
 
@@ -104,8 +75,8 @@ onMounted(() => {
         class="rounded-full border px-3 py-1.5 text-xs font-bold transition-colors"
         :class="
           store.statusFilter === tab.value
-            ? 'border-brand-primary bg-brand-primary/10 text-brand-primary'
-            : 'border-slate-200 text-slate-500 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800'
+            ? 'border-cyan-500/50 bg-cyan-500/10 text-cyan-300'
+            : 'border-slate-700 text-slate-400 hover:bg-slate-800/60'
         "
         @click="setFilter(tab.value)"
       >
@@ -113,137 +84,129 @@ onMounted(() => {
       </button>
     </div>
 
-    <div class="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
-      <div class="lg:col-span-4">
-        <div class="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-brand-dark-card">
-          <h2 class="flex items-center gap-2 border-b border-slate-200 pb-2 text-sm font-bold dark:border-slate-800">
-            <Hospital class="h-4 w-4 text-brand-primary" />
-            <span>{{ t('applications.submitTitle') }}</span>
-          </h2>
-          <p class="text-[11px] text-slate-500">{{ t('applications.submitHint') }}</p>
-
-          <form class="space-y-3" @submit.prevent="submitApplication">
-            <input
-              v-model="formName"
-              type="text"
-              required
-              :placeholder="t('clinics.namePlaceholder')"
-              class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs dark:border-slate-800 dark:bg-slate-900/60"
-            />
-            <input
-              v-model="formAddress"
-              type="text"
-              required
-              :placeholder="t('clinics.addressPlaceholder')"
-              class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs dark:border-slate-800 dark:bg-slate-900/60"
-            />
-            <input
-              v-model="formPhone"
-              type="text"
-              required
-              :placeholder="t('clinics.phonePlaceholder')"
-              class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs dark:border-slate-800 dark:bg-slate-900/60"
-            />
-            <input
-              v-model="formEmail"
-              type="email"
-              required
-              :placeholder="t('clinics.emailPlaceholder')"
-              class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs dark:border-slate-800 dark:bg-slate-900/60"
-            />
-            <input
-              v-model="formContact"
-              type="text"
-              :placeholder="t('applications.contactPerson')"
-              class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs dark:border-slate-800 dark:bg-slate-900/60"
-            />
-            <button
-              type="submit"
-              class="w-full rounded-lg bg-brand-primary py-2 text-xs font-bold text-white hover:bg-brand-primary/95"
-              :disabled="loading"
-            >
-              {{ t('applications.submit') }}
-            </button>
-          </form>
-        </div>
+    <div class="overflow-hidden rounded-xl border border-slate-700/70 bg-[#111b2e]">
+      <div class="flex items-center gap-2 border-b border-slate-700/80 px-4 py-3">
+        <ClipboardList class="h-4 w-4 text-cyan-400" />
+        <h2 class="text-sm font-bold text-white">{{ t('applications.listTitle') }}</h2>
+        <span class="ml-auto rounded-full bg-slate-800 px-2 py-0.5 font-mono text-[10px] text-slate-400">
+          {{ applications.length }}
+        </span>
       </div>
 
-      <div class="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-brand-dark-card sm:p-6 lg:col-span-8">
-        <h2 class="flex items-center gap-2 border-b border-slate-200 pb-3 text-sm font-bold dark:border-slate-800">
-          <ClipboardList class="h-4.5 w-4.5 text-brand-primary" />
-          <span>{{ t('applications.listTitle') }}</span>
-          <span class="ml-auto rounded-full bg-slate-100 px-2 py-0.5 font-mono text-xxs text-slate-500 dark:bg-slate-800">
-            {{ applications.length }}
-          </span>
-        </h2>
+      <div v-if="loading && applications.length === 0" class="py-10 text-center text-xs text-slate-500">
+        {{ t('common.loading') }}
+      </div>
+      <div v-else-if="applications.length === 0" class="py-10 text-center text-xs text-slate-500">
+        {{ t('applications.empty') }}
+      </div>
 
-        <div v-if="loading && applications.length === 0" class="py-12 text-center text-xs text-slate-400">
-          {{ t('common.loading') }}
-        </div>
-        <div v-else-if="applications.length === 0" class="py-12 text-center text-xs text-slate-400">
-          {{ t('applications.empty') }}
-        </div>
-
-        <div v-else class="space-y-3">
-          <article
-            v-for="app in applications"
-            :key="app.id"
-            class="rounded-xl border border-slate-200 p-4 dark:border-slate-800"
-          >
-            <div class="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <div class="flex items-center gap-2">
-                  <span class="font-bold text-slate-800 dark:text-white">{{ app.name }}</span>
-                  <span
-                    class="rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase"
-                    :class="statusClass(app.status)"
+      <div v-else class="overflow-x-auto">
+        <table class="w-full table-fixed border-collapse text-sm">
+          <colgroup>
+            <col class="w-16" />
+            <col class="w-[18%]" />
+            <col class="w-28" />
+            <col class="w-[14%]" />
+            <col class="w-[12%]" />
+            <col class="w-[12%]" />
+            <col class="w-28" />
+            <col class="w-32" />
+            <col class="w-28" />
+          </colgroup>
+          <thead>
+            <tr class="border-b border-slate-700/80 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+              <th class="px-3 py-2 text-left">{{ t('applications.table.id') }}</th>
+              <th class="px-3 py-2 text-left">{{ t('applications.table.clinic') }}</th>
+              <th class="px-3 py-2 text-left">{{ t('applications.table.clinicType') }}</th>
+              <th class="px-3 py-2 text-left">{{ t('applications.table.contact') }}</th>
+              <th class="px-3 py-2 text-left">{{ t('applications.table.login') }}</th>
+              <th class="px-3 py-2 text-left">{{ t('applications.table.phones') }}</th>
+              <th class="px-3 py-2 text-left">{{ t('applications.table.status') }}</th>
+              <th class="px-3 py-2 text-left">{{ t('applications.table.createdAt') }}</th>
+              <th class="px-3 py-2 text-right">{{ t('clinics.table.actions') }}</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800/80 text-slate-300">
+            <tr
+              v-for="app in applications"
+              :key="String(app.id)"
+              class="hover:bg-slate-800/40"
+            >
+              <td class="px-3 py-2 font-mono text-[11px] text-slate-500" :title="String(app.id)">
+                {{ String(app.id).slice(0, 8) }}…
+              </td>
+              <td class="px-3 py-2">
+                <span class="line-clamp-2 font-semibold text-white" :title="getApplicationClinicName(app)">
+                  {{ getApplicationClinicName(app) }}
+                </span>
+              </td>
+              <td class="px-3 py-2">
+                <span
+                  v-if="app.clinicType"
+                  class="inline-block rounded-full bg-slate-800 px-2 py-0.5 text-[11px] font-semibold text-slate-300"
+                >
+                  {{ t(`registration.clinicTypes.${app.clinicType}`) }}
+                </span>
+                <span v-else class="text-slate-600">—</span>
+              </td>
+              <td class="px-3 py-2">
+                <div class="flex items-center gap-1 truncate">
+                  <User class="h-3.5 w-3.5 shrink-0 text-slate-500" />
+                  <span class="truncate" :title="getApplicationContactName(app)">{{ getApplicationContactName(app) }}</span>
+                </div>
+              </td>
+              <td class="px-3 py-2 truncate font-mono text-[12px]" :title="app.login || ''">{{ app.login || '—' }}</td>
+              <td class="px-3 py-2">
+                <div class="flex items-center gap-1 truncate">
+                  <Phone class="h-3.5 w-3.5 shrink-0 text-slate-500" />
+                  <span class="truncate">{{ app.phoneNumber1 || '—' }}</span>
+                </div>
+                <div v-if="app.phoneNumber2" class="mt-0.5 truncate text-[11px] text-slate-500">{{ app.phoneNumber2 }}</div>
+              </td>
+              <td class="px-3 py-2">
+                <span
+                  class="inline-block rounded-full border px-2 py-0.5 text-[10px] font-bold"
+                  :class="statusClass(app.status)"
+                >
+                  {{ statusLabel(app.status) }}
+                </span>
+              </td>
+              <td class="px-3 py-2">
+                <div class="flex items-center gap-1 text-[11px] text-slate-500">
+                  <Calendar class="h-3.5 w-3.5 shrink-0" />
+                  <span class="whitespace-nowrap">{{ formatApplicationDate(app.createdAt) }}</span>
+                </div>
+              </td>
+              <td class="px-3 py-2 text-right">
+                <div v-if="app.status === 'PENDING'" class="flex justify-end gap-1">
+                  <button
+                    type="button"
+                    class="rounded-lg bg-emerald-500/10 p-1.5 text-emerald-400 hover:bg-emerald-500/20 disabled:opacity-50"
+                    :disabled="loading"
+                    :title="t('applications.approve')"
+                    @click="approve(app.id)"
                   >
-                    {{ app.status }}
-                  </span>
+                    <Check class="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    class="rounded-lg bg-red-500/10 p-1.5 text-red-400 hover:bg-red-500/20 disabled:opacity-50"
+                    :disabled="loading"
+                    :title="t('applications.reject')"
+                    @click="reject(app.id)"
+                  >
+                    <X class="h-4 w-4" />
+                  </button>
                 </div>
-                <div class="mt-2 space-y-1 text-[11px] text-slate-500">
-                  <div class="flex items-center gap-1.5">
-                    <MapPin class="h-3.5 w-3.5" />
-                    <span>{{ app.address }}</span>
-                  </div>
-                  <div class="flex items-center gap-1.5">
-                    <Phone class="h-3.5 w-3.5" />
-                    <span>{{ app.phone || '—' }}</span>
-                  </div>
-                  <div class="flex items-center gap-1.5">
-                    <Mail class="h-3.5 w-3.5" />
-                    <span>{{ app.email }}</span>
-                  </div>
-                  <div v-if="app.contactPerson || app.contact" class="flex items-center gap-1.5">
-                    <User class="h-3.5 w-3.5" />
-                    <span>{{ app.contactPerson || app.contact }}</span>
-                  </div>
+                <div v-else-if="app.secretKey" class="flex items-center justify-end gap-1 text-[11px] text-slate-500">
+                  <Key class="h-3.5 w-3.5 shrink-0" />
+                  <code class="max-w-full truncate">{{ app.secretKey }}</code>
                 </div>
-              </div>
-
-              <div v-if="app.status === 'PENDING'" class="flex gap-2">
-                <button
-                  type="button"
-                  class="inline-flex items-center gap-1 rounded-lg bg-emerald-500/10 px-3 py-1.5 text-xs font-bold text-emerald-600 hover:bg-emerald-500/20 dark:text-emerald-400"
-                  :disabled="loading"
-                  @click="approve(app.id)"
-                >
-                  <Check class="h-3.5 w-3.5" />
-                  {{ t('applications.approve') }}
-                </button>
-                <button
-                  type="button"
-                  class="inline-flex items-center gap-1 rounded-lg bg-red-500/10 px-3 py-1.5 text-xs font-bold text-red-600 hover:bg-red-500/20 dark:text-red-400"
-                  :disabled="loading"
-                  @click="reject(app.id)"
-                >
-                  <X class="h-3.5 w-3.5" />
-                  {{ t('applications.reject') }}
-                </button>
-              </div>
-            </div>
-          </article>
-        </div>
+                <span v-else class="text-slate-600">—</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>

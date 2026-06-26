@@ -2,6 +2,7 @@
 import SiteHeader from '../components/layout/SiteHeader.vue'
 import HeroSection from '../components/sections/HeroSection.vue'
 import HowItWorksSection from '../components/sections/HowItWorksSection.vue'
+import ClinicRegistrationSection from '../components/sections/ClinicRegistrationSection.vue'
 import CtaSection from '../components/sections/CtaSection.vue'
 import SiteFooter from '../components/layout/SiteFooter.vue'
 
@@ -23,7 +24,10 @@ import SiteFooter from '../components/layout/SiteFooter.vue'
       <!-- 3. Tizim qanday ishlashi bo'limi -->
       <HowItWorksSection />
 
-      <!-- 6. Harakatga chaqiruv (CTA) bo'limi -->
+      <!-- 4. Klinika ro'yxatdan o'tish -->
+      <ClinicRegistrationSection />
+
+      <!-- 5. Harakatga chaqiruv (CTA) bo'limi -->
       <CtaSection />
 
     </main>

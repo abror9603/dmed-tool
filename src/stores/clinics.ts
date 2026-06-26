@@ -1,9 +1,11 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { clinicsService, type Clinic, type ClinicPayload } from '../services/clinics'
+import { i18n } from '../i18n'
+import { clinicsService, type ClinicPayload } from '../services/clinics'
+import { getErrorMessage } from '../utils/errors'
 
 export const useClinicsStore = defineStore('clinics', () => {
-  const clinics = ref<Clinic[]>([])
+  const clinics = ref<Awaited<ReturnType<typeof clinicsService.getAll>>>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
   const successMessage = ref<string | null>(null)
@@ -13,14 +15,17 @@ export const useClinicsStore = defineStore('clinics', () => {
     successMessage.value = null
   }
 
-  const fetchAllClinics = async () => {
+  const fetchAllClinics = async (status?: 'ACTIVE' | 'INACTIVE' | 'ALL') => {
     loading.value = true
     error.value = null
     try {
-      const data = await clinicsService.getAll()
+      const data =
+        status === 'ACTIVE' || status === 'INACTIVE'
+          ? await clinicsService.getByStatus(status)
+          : await clinicsService.getAll()
       clinics.value = Array.isArray(data) ? data : []
-    } catch (err: any) {
-      error.value = err.response?.data?.message || err.message || "Klinikalarni yuklashda xatolik."
+    } catch (err) {
+      error.value = getErrorMessage(err, i18n.global.t('errors.clinicsLoad'))
       throw err
     } finally {
       loading.value = false
@@ -31,12 +36,11 @@ export const useClinicsStore = defineStore('clinics', () => {
     loading.value = true
     error.value = null
     try {
-      const newClinic = await clinicsService.create(payload)
-      successMessage.value = "Yangi klinika muvaffaqiyatli qo'shildi!"
+      await clinicsService.create(payload)
+      successMessage.value = i18n.global.t('errors.clinicCreated')
       await fetchAllClinics()
-      return newClinic
-    } catch (err: any) {
-      error.value = err.response?.data?.message || err.message || "Klinika yaratishda xatolik."
+    } catch (err) {
+      error.value = getErrorMessage(err, i18n.global.t('errors.clinicCreate'))
       throw err
     } finally {
       loading.value = false
@@ -47,12 +51,11 @@ export const useClinicsStore = defineStore('clinics', () => {
     loading.value = true
     error.value = null
     try {
-      const updated = await clinicsService.update(id, payload)
-      successMessage.value = "Klinika ma'lumotlari muvaffaqiyatli yangilandi!"
+      await clinicsService.update(id, payload)
+      successMessage.value = i18n.global.t('errors.clinicUpdated')
       await fetchAllClinics()
-      return updated
-    } catch (err: any) {
-      error.value = err.response?.data?.message || err.message || "Klinika tahrirlashda xatolik."
+    } catch (err) {
+      error.value = getErrorMessage(err, i18n.global.t('errors.clinicUpdate'))
       throw err
     } finally {
       loading.value = false
@@ -63,12 +66,11 @@ export const useClinicsStore = defineStore('clinics', () => {
     loading.value = true
     error.value = null
     try {
-      const updated = await clinicsService.toggleStatus(id)
-      successMessage.value = "Klinika statusi muvaffaqiyatli yangilandi!"
+      await clinicsService.toggleStatus(id)
+      successMessage.value = i18n.global.t('errors.statusUpdated')
       await fetchAllClinics()
-      return updated
-    } catch (err: any) {
-      error.value = err.response?.data?.message || err.message || "Statusni o'zgartirishda xatolik."
+    } catch (err) {
+      error.value = getErrorMessage(err, i18n.global.t('errors.clinicStatus'))
       throw err
     } finally {
       loading.value = false
@@ -80,10 +82,10 @@ export const useClinicsStore = defineStore('clinics', () => {
     error.value = null
     try {
       await clinicsService.delete(id)
-      successMessage.value = "Klinika muvaffaqiyatli o'chirildi!"
+      successMessage.value = i18n.global.t('errors.clinicDeleted')
       await fetchAllClinics()
-    } catch (err: any) {
-      error.value = err.response?.data?.message || err.message || "Klinikani o'chirishda xatolik."
+    } catch (err) {
+      error.value = getErrorMessage(err, i18n.global.t('errors.clinicDelete'))
       throw err
     } finally {
       loading.value = false
@@ -100,6 +102,6 @@ export const useClinicsStore = defineStore('clinics', () => {
     createClinic,
     updateClinic,
     toggleClinicStatus,
-    deleteClinic
+    deleteClinic,
   }
 })

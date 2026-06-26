@@ -1,26 +1,5 @@
-import type { HeroContent, WorkflowStep, ImpactStat, SimulatorScenario } from '../types/landing.types';
+import type { ImpactStat, SimulatorScenario } from '../types/landing.types';
 
-/**
- * Hero bo'limi uchun matnlar va harakatlar
- */
-export const heroContent: HeroContent = {
-  headline: "O'zbekistonda har bir bemorning shifokorga yetib borishi kafolatlansin",
-  subheadline: "Shifoxonadan chiqqan bemorlarni nazorat qilish va mahalliy oilaviy shifokorlarga avtomatik yo'naltirish imkonini beruvchi Sun'iy Intellekt tizimi.",
-  primaryCta: {
-    label: "Get started",
-    href: "#how-it-works",
-    variant: 'primary'
-  },
-  secondaryCta: {
-    label: "Docs",
-    href: "#/docs",
-    variant: 'secondary'
-  }
-};
-
-/**
- * Muammo bo'limi uchun ma'lumotlar (Zone 2)
- */
 export const problemCards = [
   {
     id: 'problem-1',
@@ -45,40 +24,6 @@ export const problemCards = [
     label: 'Zaxira tizimining yo\'qligi',
     description: 'Agar biriktirilgan shifokor mehnat ta\'tilida yoki band bo\'lsa, bemor hech qanday monitoringlarsiz e\'tibordan chetda qoladi.',
     accentClass: 'border-l-4 border-risk-critical'
-  }
-];
-
-/**
- * Tizim qanday ishlashi bosqichlari (Zone 3)
- */
-export const workflowSteps: WorkflowStep[] = [
-  {
-    stepNumber: 1,
-    icon: 'Hospital',
-    title: 'Chiqish Aniqlandi',
-    description: 'DMED milliy ekotizimi bilan integratsiya orqali bemorning shifoxonadan javob berilganligi avtomatik ravishda aniqlanadi.',
-    highlightColor: 'text-brand-accent'
-  },
-  {
-    stepNumber: 2,
-    icon: 'BrainCircuit',
-    title: 'AI Baholash',
-    description: 'Sun\'iy Intellekt modeli bemorning klinik ko\'rsatkichlarini tahlil qilib, uy tashrifi zarurligini 0 dan 100 ballgacha baholaydi.',
-    highlightColor: 'text-brand-accent'
-  },
-  {
-    stepNumber: 3,
-    icon: 'BellRing',
-    title: 'Tezkor Xabarnoma',
-    description: 'AI tomonidan baholangan ma\'lumotlar va shoshilinchlik darajasi shifokorga xavfsiz mobil tizim orqali darhol yuboriladi.',
-    highlightColor: 'text-brand-accent'
-  },
-  {
-    stepNumber: 4,
-    icon: 'ShieldCheck',
-    title: 'Zaxira Yo\'naltirish',
-    description: 'Agar birinchi shifokor ishda bo\'lmasa, AI bildirishnomani poliklinikadagi zaxira shifokorga avtomatik yo\'naltiradi.',
-    highlightColor: 'text-brand-accent'
   }
 ];
 

@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { Calendar, CheckCircle2, MessageSquare, ArrowRight, BookOpen, ShieldCheck } from 'lucide-vue-next'
-import { heroContent } from '../../data/landing.data'
+import { useI18n } from 'vue-i18n'
+import { useLandingContent } from '../../composables/useLandingContent'
 
-// O'zbek tilida izoh:
-// HeroSection - marketing landing pagening kirish qismi bo'lib, loyihaning maqsadini ochib beradi.
-// O'ng tomondagi grafik panellar foydalanuvchi taqdim etgan namuna bo'yicha tayyorlangan.
+const { t } = useI18n()
+const { heroCtas } = useLandingContent()
 </script>
 
 <template>
@@ -28,46 +28,43 @@ import { heroContent } from '../../data/landing.data'
           <!-- Yangilanish nishoni (Badge) -->
           <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full border border-brand-primary/20 bg-brand-primary/5 text-brand-primary dark:bg-brand-primary/10 text-xs font-semibold uppercase tracking-wider">
             <span class="flex h-2 w-2 rounded-full bg-brand-primary"></span>
-            <span>DMED Tool 2.0 yangilanishi!</span>
+            <span>{{ t('hero.badge') }}</span>
           </div>
 
           <!-- Asosiy sarlavha -->
           <h1 class="text-4xl sm:text-5xl font-black tracking-tight text-slate-900 dark:text-white leading-[1.15]">
-            O'zbekistonda har bir bemorning
+            {{ t('hero.headline') }}
             <span class="bg-gradient-to-r from-brand-primary via-blue-500 to-brand-secondary bg-clip-text text-transparent">
-              shifokorga yetib borishi
+              {{ t('hero.headlineHighlight') }}
             </span>
-            kafolatlansin
+            {{ t('hero.headlineEnd') }}
           </h1>
 
-          <!-- Ta'rif -->
           <p class="text-base sm:text-lg text-slate-600 dark:text-slate-300 leading-relaxed max-w-xl mx-auto lg:mx-0">
-            {{ heroContent.subheadline }}
+            {{ t('hero.subheadline') }}
           </p>
 
-          <!-- Harakat tugmalari -->
           <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
             <a
-              :href="heroContent.primaryCta.href"
+              :href="heroCtas.primary.href"
               class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3.5 text-base font-bold text-white bg-brand-primary hover:bg-brand-primary/95 hover:shadow-lg hover:shadow-brand-primary/25 rounded-xl transition-all duration-200 active:scale-95 group"
             >
-              <span>{{ heroContent.primaryCta.label }}</span>
+              <span>{{ heroCtas.primary.label }}</span>
               <ArrowRight class="w-5 h-5 ml-2 transform group-hover:translate-x-1 transition-transform" />
             </a>
             
             <a
-              :href="heroContent.secondaryCta.href"
+              :href="heroCtas.secondary.href"
               class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3.5 text-base font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 hover:text-brand-primary dark:text-slate-200 dark:bg-slate-900/60 dark:border-slate-800 dark:hover:bg-slate-800/80 rounded-xl transition-all duration-200 active:scale-95"
             >
               <BookOpen class="w-5 h-5 mr-2" />
-              <span>{{ heroContent.secondaryCta.label }}</span>
+              <span>{{ heroCtas.secondary.label }}</span>
             </a>
           </div>
 
-          <!-- Integratsiya kafolati -->
           <div class="flex items-center justify-center lg:justify-start space-x-2 pt-4 text-xs text-slate-500 dark:text-slate-400">
             <ShieldCheck class="w-4 h-4 text-emerald-500" />
-            <span>DMED Integratsiyasi va Milliy Sog'liqni saqlash talablariga mos</span>
+            <span>{{ t('hero.integration') }}</span>
           </div>
 
         </div>
@@ -104,7 +101,7 @@ import { heroContent } from '../../data/landing.data'
                 <div class="p-1.5 rounded-lg bg-brand-primary/10 text-brand-primary dark:bg-brand-primary/20">
                   <Calendar class="w-4 h-4" />
                 </div>
-                <span class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100">Navbatchilik</span>
+                <span class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100">{{ t('hero.widgets.schedule') }}</span>
               </div>
               <span class="inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
             </div>
@@ -114,9 +111,9 @@ import { heroContent } from '../../data/landing.data'
               <div class="flex items-center justify-between p-2 rounded-lg bg-slate-100/50 dark:bg-slate-800/50 border border-slate-200/50 dark:border-slate-700/50">
                 <div>
                   <p class="text-[10px] sm:text-xs font-semibold text-slate-800 dark:text-slate-200">Dr. Alisher S.</p>
-                  <p class="text-[8px] sm:text-[10px] text-slate-500 dark:text-slate-400">Oilaviy shifokor</p>
+                  <p class="text-[8px] sm:text-[10px] text-slate-500 dark:text-slate-400">{{ t('hero.widgets.familyDoctor') }}</p>
                 </div>
-                <span class="text-[8px] sm:text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">Faol</span>
+                <span class="text-[8px] sm:text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">{{ t('hero.widgets.active') }}</span>
               </div>
               
               <!-- Oddiy kalendar mini-seti -->
@@ -146,15 +143,15 @@ import { heroContent } from '../../data/landing.data'
               </div>
               <div class="space-y-1">
                 <div class="flex items-center justify-between">
-                  <span class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100">SMS Bildirishnoma</span>
-                  <span class="text-[9px] text-slate-400 dark:text-slate-500">Hozirgina</span>
+                  <span class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100">{{ t('hero.widgets.smsTitle') }}</span>
+                  <span class="text-[9px] text-slate-400 dark:text-slate-500">{{ t('hero.widgets.smsTime') }}</span>
                 </div>
                 <p class="text-[10px] sm:text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                  SMS yuborildi: <span class="font-semibold text-slate-800 dark:text-white">Bemor J.A.</span> ko'rigi uchun oilaviy shifokorga yo'naltirildi.
+                  {{ t('hero.widgets.smsBody', { patient: 'J.A.' }) }}
                 </p>
                 <div class="flex items-center space-x-1 text-[9px] text-emerald-600 dark:text-emerald-400 font-medium pt-1">
                   <CheckCircle2 class="w-3.5 h-3.5" />
-                  <span>Yetkazib berildi</span>
+                  <span>{{ t('hero.widgets.smsDelivered') }}</span>
                 </div>
               </div>
             </div>
@@ -174,13 +171,13 @@ import { heroContent } from '../../data/landing.data'
                 class="w-full h-full object-cover"
               />
               <div class="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded-full bg-brand-primary text-white text-[8px] font-bold tracking-wide uppercase">
-                Tashrif
+                {{ t('hero.widgets.visit') }}
               </div>
             </div>
-            
+
             <div class="mt-2 text-center">
-              <p class="text-[10px] font-bold text-slate-800 dark:text-slate-100">Uyda tibbiy ko'rik</p>
-              <p class="text-[8px] text-slate-500 dark:text-slate-400">Tizim orqali belgilangan tashrif</p>
+              <p class="text-[10px] font-bold text-slate-800 dark:text-slate-100">{{ t('hero.widgets.homeVisit') }}</p>
+              <p class="text-[8px] text-slate-500 dark:text-slate-400">{{ t('hero.widgets.homeVisitDesc') }}</p>
             </div>
           </div>
 

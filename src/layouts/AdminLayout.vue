@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, inject, type Ref } from 'vue'
+import { computed, ref } from 'vue'
 import { RouterLink, RouterView, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
@@ -7,39 +7,37 @@ import {
   Hospital,
   Settings,
   LogOut,
-  Moon,
-  Sun,
   Menu,
   X,
-  BookOpen,
   ClipboardList,
   Users,
   Activity,
 } from 'lucide-vue-next'
-import { ref } from 'vue'
-import LanguageSwitcher from '../components/layout/LanguageSwitcher.vue'
+import { useAdminLocale } from '../composables/useAdminLocale'
 import { ROUTE_NAMES } from '../router'
 import { useAuthStore } from '../stores/auth'
 
 const { t } = useI18n()
+useAdminLocale()
 const route = useRoute()
 const authStore = useAuthStore()
-const theme = inject<Ref<'light' | 'dark'>>('theme')
-const toggleTheme = inject<() => void>('toggleTheme')
 const sidebarOpen = ref(false)
 
-const navItems = computed(() => [
+const mainNav = computed(() => [
   {
     name: ROUTE_NAMES.ADMIN_DASHBOARD,
     label: t('admin.dashboard'),
     icon: LayoutDashboard,
     to: { name: ROUTE_NAMES.ADMIN_DASHBOARD },
   },
+])
+
+const manageNav = computed(() => [
   {
-    name: ROUTE_NAMES.ADMIN_APPLICATIONS,
-    label: t('admin.applications'),
-    icon: ClipboardList,
-    to: { name: ROUTE_NAMES.ADMIN_APPLICATIONS },
+    name: ROUTE_NAMES.ADMIN_MEDICAL_EVENTS,
+    label: t('admin.medicalEvents'),
+    icon: Activity,
+    to: { name: ROUTE_NAMES.ADMIN_MEDICAL_EVENTS },
   },
   {
     name: ROUTE_NAMES.ADMIN_CLINICS,
@@ -48,16 +46,16 @@ const navItems = computed(() => [
     to: { name: ROUTE_NAMES.ADMIN_CLINICS },
   },
   {
+    name: ROUTE_NAMES.ADMIN_APPLICATIONS,
+    label: t('admin.applications'),
+    icon: ClipboardList,
+    to: { name: ROUTE_NAMES.ADMIN_APPLICATIONS },
+  },
+  {
     name: ROUTE_NAMES.ADMIN_USERS,
     label: t('admin.users'),
     icon: Users,
     to: { name: ROUTE_NAMES.ADMIN_USERS },
-  },
-  {
-    name: ROUTE_NAMES.ADMIN_MEDICAL_EVENTS,
-    label: t('admin.medicalEvents'),
-    icon: Activity,
-    to: { name: ROUTE_NAMES.ADMIN_MEDICAL_EVENTS },
   },
   {
     name: ROUTE_NAMES.ADMIN_SETTINGS,
@@ -67,126 +65,152 @@ const navItems = computed(() => [
   },
 ])
 
-const pageTitle = computed(() => {
-  const item = navItems.value.find((nav) => nav.name === route.name)
-  return item?.label ?? t('admin.title')
-})
-
 const userLabel = computed(() => {
   const user = authStore.user
-  if (!user) {
-    return t('admin.welcomeDefault')
-  }
+  if (!user) return t('admin.superAdmin')
   const fullName = [user.firstName, user.lastName].filter(Boolean).join(' ')
   return fullName || user.login
 })
 
+const userInitial = computed(() => userLabel.value.charAt(0).toUpperCase())
+
+const isDashboard = computed(() => route.name === ROUTE_NAMES.ADMIN_DASHBOARD)
+
 function closeSidebarOnMobile(): void {
   sidebarOpen.value = false
+}
+
+function isActive(name: string): boolean {
+  return route.name === name
 }
 </script>
 
 <template>
-  <div class="flex min-h-screen bg-slate-50 text-slate-900 dark:bg-brand-dark dark:text-slate-100">
+  <div class="flex min-h-screen bg-[#0a101d] text-slate-100">
     <div
       v-if="sidebarOpen"
-      class="fixed inset-0 z-40 bg-slate-900/50 lg:hidden"
+      class="fixed inset-0 z-40 bg-black/60 lg:hidden"
       @click="sidebarOpen = false"
     />
 
     <aside
-      class="fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-slate-200 bg-white transition-transform duration-300 dark:border-slate-800 dark:bg-brand-dark-card lg:static lg:translate-x-0"
+      class="fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-slate-800 bg-[#0d1526] transition-transform duration-300 lg:static lg:translate-x-0"
       :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
     >
-      <div class="flex h-16 items-center justify-between border-b border-slate-200 px-5 dark:border-slate-800">
-        <RouterLink to="/" class="flex items-center gap-2" @click="closeSidebarOnMobile">
-          <span class="text-lg font-black tracking-tight bg-gradient-to-r from-brand-primary to-brand-secondary bg-clip-text text-transparent">
-            {{ t('common.brand') }}
-          </span>
+      <div class="flex h-16 items-center justify-between border-b border-slate-800 px-5">
+        <RouterLink to="/" class="block" @click="closeSidebarOnMobile">
+          <p class="text-lg font-black tracking-tight text-white">{{ t('common.brand') }}</p>
+          <p class="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500">
+            {{ t('admin.panelSubtitle') }}
+          </p>
         </RouterLink>
         <button
           type="button"
-          class="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 lg:hidden"
-          :aria-label="t('common.cancel')"
+          class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 lg:hidden"
           @click="sidebarOpen = false"
         >
           <X class="h-5 w-5" />
         </button>
       </div>
 
-      <div class="border-b border-slate-200 px-5 py-4 dark:border-slate-800">
-        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">{{ t('admin.title') }}</p>
-        <p class="mt-1 truncate text-sm font-semibold text-slate-800 dark:text-white">{{ userLabel }}</p>
-      </div>
+      <nav class="flex-1 space-y-6 overflow-y-auto p-4">
+        <div>
+          <p class="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
+            {{ t('admin.navMain') }}
+          </p>
+          <div class="space-y-1">
+            <RouterLink
+              v-for="item in mainNav"
+              :key="item.name"
+              :to="item.to"
+              class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors"
+              :class="
+                isActive(item.name)
+                  ? 'border-l-2 border-cyan-400 bg-cyan-500/10 text-cyan-300'
+                  : 'text-slate-400 hover:bg-slate-800/80 hover:text-white'
+              "
+              @click="closeSidebarOnMobile"
+            >
+              <component :is="item.icon" class="h-4.5 w-4.5 shrink-0" />
+              <span>{{ item.label }}</span>
+            </RouterLink>
+          </div>
+        </div>
 
-      <nav class="flex-1 space-y-1 p-3">
-        <RouterLink
-          v-for="item in navItems"
-          :key="item.name"
-          :to="item.to"
-          class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors"
-          :class="
-            route.name === item.name
-              ? 'bg-brand-primary/10 text-brand-primary'
-              : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'
-          "
-          @click="closeSidebarOnMobile"
-        >
-          <component :is="item.icon" class="h-4.5 w-4.5 shrink-0" />
-          <span>{{ item.label }}</span>
-        </RouterLink>
-
-        <RouterLink
-          :to="{ name: ROUTE_NAMES.DOCS, params: { section: 'intro' } }"
-          class="mt-4 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
-          @click="closeSidebarOnMobile"
-        >
-          <BookOpen class="h-4.5 w-4.5 shrink-0" />
-          <span>{{ t('common.docs') }}</span>
-        </RouterLink>
+        <div>
+          <p class="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
+            {{ t('admin.navManage') }}
+          </p>
+          <div class="space-y-1">
+            <RouterLink
+              v-for="item in manageNav"
+              :key="item.name"
+              :to="item.to"
+              class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors"
+              :class="
+                isActive(item.name)
+                  ? 'border-l-2 border-cyan-400 bg-cyan-500/10 text-cyan-300'
+                  : 'text-slate-400 hover:bg-slate-800/80 hover:text-white'
+              "
+              @click="closeSidebarOnMobile"
+            >
+              <component :is="item.icon" class="h-4.5 w-4.5 shrink-0" />
+              <span>{{ item.label }}</span>
+            </RouterLink>
+          </div>
+        </div>
       </nav>
 
-      <div class="border-t border-slate-200 p-3 dark:border-slate-800">
-        <button
-          type="button"
-          class="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
-          @click="authStore.logout()"
-        >
-          <LogOut class="h-4.5 w-4.5 shrink-0" />
-          <span>{{ t('common.logout') }}</span>
-        </button>
+      <div class="border-t border-slate-800 p-4">
+        <div class="flex items-center gap-3 rounded-2xl bg-slate-900/70 px-3 py-3">
+          <div class="flex h-10 w-10 items-center justify-center rounded-full bg-cyan-500/20 text-sm font-black text-cyan-300">
+            {{ userInitial }}
+          </div>
+          <div class="min-w-0 flex-1">
+            <p class="truncate text-sm font-bold text-white">{{ userLabel }}</p>
+            <p class="text-[11px] text-slate-500">{{ t('admin.superAdmin') }}</p>
+          </div>
+          <button
+            type="button"
+            class="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-800 hover:text-rose-300"
+            :title="t('common.logout')"
+            @click="authStore.logout()"
+          >
+            <LogOut class="h-4 w-4" />
+          </button>
+        </div>
       </div>
     </aside>
 
     <div class="flex min-w-0 flex-1 flex-col">
-      <header class="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200 bg-white/90 px-4 backdrop-blur dark:border-slate-800 dark:bg-brand-dark/90 sm:px-6">
+      <header
+        v-if="!isDashboard"
+        class="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-800 bg-[#0a101d]/95 px-4 backdrop-blur sm:px-6"
+      >
         <div class="flex items-center gap-3">
           <button
             type="button"
-            class="rounded-lg p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 lg:hidden"
-            :aria-label="t('admin.menu')"
+            class="rounded-lg p-2 text-slate-400 hover:bg-slate-800 lg:hidden"
             @click="sidebarOpen = true"
           >
             <Menu class="h-5 w-5" />
           </button>
-          <h1 class="text-base font-extrabold text-slate-800 dark:text-white">{{ pageTitle }}</h1>
-        </div>
-
-        <div class="flex items-center gap-2">
-          <LanguageSwitcher />
-          <button
-            type="button"
-            class="rounded-lg p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
-            :aria-label="t('common.themeToggle')"
-            @click="toggleTheme"
-          >
-            <Sun v-if="theme === 'dark'" class="h-5 w-5 text-amber-400" />
-            <Moon v-else class="h-5 w-5 text-slate-600" />
-          </button>
+          <h1 class="min-w-0 truncate text-base font-extrabold text-white">
+            {{ manageNav.find((item) => item.name === route.name)?.label ?? mainNav[0]?.label }}
+          </h1>
         </div>
       </header>
 
-      <main class="flex-1 overflow-auto p-4 sm:p-6 lg:p-8">
+      <header
+        v-else
+        class="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-slate-800 bg-[#0a101d]/95 px-4 backdrop-blur sm:px-6 lg:hidden"
+      >
+        <button type="button" class="rounded-lg p-2 text-slate-400 hover:bg-slate-800" @click="sidebarOpen = true">
+          <Menu class="h-5 w-5" />
+        </button>
+      </header>
+
+      <main class="min-w-0 flex-1 overflow-auto p-4 sm:p-5 lg:p-6">
         <RouterView />
       </main>
     </div>

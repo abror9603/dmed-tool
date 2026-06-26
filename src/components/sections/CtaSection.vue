@@ -46,7 +46,7 @@ const { t } = useI18n()
         class="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8"
       >
         <a
-          href="#how-it-works"
+          href="#clinic-registration"
           class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3.5 text-base font-bold text-white bg-brand-primary hover:bg-brand-primary/90 hover:shadow-lg hover:shadow-brand-primary/25 rounded-xl transition-all duration-200 active:scale-95 group"
         >
           <span>{{ t('common.getStarted') }}</span>

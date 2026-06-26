@@ -24,13 +24,19 @@ function updateApiUrl(): void {
 }
 
 function resetApiUrl(): void {
+  localStorage.removeItem(STORAGE_KEYS.API_URL)
   apiUrl.value = defaultApiUrl
-  updateApiUrl()
+  saved.value = true
+  clinicsStore.clearMessages()
+  clinicsStore.successMessage = i18n.global.t('clinics.apiUrlReset')
+  setTimeout(() => {
+    saved.value = false
+  }, 2500)
 }
 </script>
 
 <template>
-  <div class="mx-auto max-w-2xl space-y-6">
+  <div class="mx-auto min-w-0 max-w-2xl space-y-6">
     <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-brand-dark-card">
       <div class="mb-5 flex items-center gap-2">
         <Settings class="h-5 w-5 text-brand-primary" />

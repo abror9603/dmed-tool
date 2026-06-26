@@ -1,11 +1,18 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { i18n } from '../i18n'
-import { usersService, type UserPayload } from '../services/users'
+import { usersService, type UserPayload, type UsersQuery } from '../services/users'
 import { getErrorMessage } from '../utils/errors'
 
+const DEFAULT_FILTERS: UsersQuery = {
+  page: 0,
+  size: 30,
+}
+
 export const useUsersStore = defineStore('users', () => {
-  const users = ref<Awaited<ReturnType<typeof usersService.getAll>>>([])
+  const users = ref<Awaited<ReturnType<typeof usersService.getAll>>['users']>([])
+  const filters = ref<UsersQuery>({ ...DEFAULT_FILTERS })
+  const total = ref(0)
   const loading = ref(false)
   const error = ref<string | null>(null)
   const successMessage = ref<string | null>(null)
@@ -15,18 +22,29 @@ export const useUsersStore = defineStore('users', () => {
     successMessage.value = null
   }
 
-  async function fetchUsers(): Promise<void> {
+  async function fetchUsers(query?: Partial<UsersQuery>): Promise<void> {
     loading.value = true
     error.value = null
     try {
-      const data = await usersService.getAll()
-      users.value = Array.isArray(data) ? data : []
+      if (query) {
+        filters.value = { ...filters.value, ...query }
+      }
+      const result = await usersService.getAll(filters.value)
+      users.value = result.users
+      total.value = result.total
+      filters.value.page = result.page
+      filters.value.size = result.size
     } catch (err) {
       error.value = getErrorMessage(err, i18n.global.t('errors.usersLoad'))
       throw err
     } finally {
       loading.value = false
     }
+  }
+
+  async function resetFilters(): Promise<void> {
+    filters.value = { ...DEFAULT_FILTERS }
+    await fetchUsers()
   }
 
   async function createUser(payload: UserPayload): Promise<void> {
@@ -76,11 +94,14 @@ export const useUsersStore = defineStore('users', () => {
 
   return {
     users,
+    filters,
+    total,
     loading,
     error,
     successMessage,
     clearMessages,
     fetchUsers,
+    resetFilters,
     createUser,
     updateUser,
     deleteUser,

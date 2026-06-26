@@ -499,6 +499,9 @@ print(response.json())`
               <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">
                 Tizim shifokor va bemor ma'lumotlarini aniqlagandan so'ng, ushbu endpoint orqali oilaviy shifokorga bemorning holati haqida Eskiz.uz shlyuzi orqali tezkor SMS yuboriladi.
               </p>
+              <div class="p-3 bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 rounded-xl text-xxs font-medium leading-relaxed">
+                <strong>Avtomatik Zaxira Yo'naltirish (Auto-Rerouting):</strong> Tizim asosiy shifokorning faolligini (ta'til, kasallik varaqasi va h.k.) avtomatik tekshiradi. Agar shifokor faol bo'lsa xabar uning o'ziga boradi. Agar nofaol bo'lsa, tizim o'rindosh shifokorni aniqlab, SMS-ni o'sha shifokorga yuboradi va bu haqda javob (Response) tarkibida to'liq hisobot beradi.
+              </div>
             </div>
 
             <div class="space-y-4">
@@ -559,18 +562,47 @@ print(response.json())`
             </div>
 
             <!-- JSON javobi -->
-            <div class="space-y-3">
-              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block border-b border-slate-800 pb-2">Javob namunasi (Response)</span>
-              <div class="bg-slate-900 rounded-xl p-4 border border-slate-800 overflow-x-auto">
-                <pre class="leading-relaxed"><code>{
+            <div class="space-y-4">
+              <div>
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block border-b border-slate-800 pb-2 mb-1.5">Javob namunasi (Normal - Shifokor faol bo'lsa)</span>
+                <div class="bg-slate-900 rounded-xl p-4 border border-slate-800 overflow-x-auto">
+                  <pre class="leading-relaxed"><code>{
   "status": "success",
   "message": "sms_notification_dispatched",
   "data": {
     "sms_id": "sms_998127391",
     "recipient_phone": "+998901234567",
-    "delivery_status": "sent"
+    "delivery_status": "sent",
+    "routing_details": {
+      "primary_doctor_id": "DOC-9921",
+      "primary_doctor_status": "active",
+      "rerouted_to_backup": false
+    }
   }
 }</code></pre>
+                </div>
+              </div>
+
+              <div>
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block border-b border-slate-800 pb-2 mb-1.5">Javob namunasi (Zaxiraga Yo'naltirilganda)</span>
+                <div class="bg-slate-900 rounded-xl p-4 border border-slate-800 overflow-x-auto">
+                  <pre class="leading-relaxed"><code>{
+  "status": "success",
+  "message": "sms_notification_dispatched",
+  "data": {
+    "sms_id": "sms_998127391",
+    "recipient_phone": "+998909876543", // O'rindosh shifokor raqami
+    "delivery_status": "sent",
+    "routing_details": {
+      "primary_doctor_id": "DOC-9921",
+      "primary_doctor_status": "on_vacation",
+      "rerouted_to_backup": true,
+      "backup_doctor_id": "DOC-8832",
+      "backup_doctor_name": "Dr. Umida B."
+    }
+  }
+}</code></pre>
+                </div>
               </div>
             </div>
           </div>

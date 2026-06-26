@@ -2,17 +2,20 @@
 import { ref, provide, onMounted } from 'vue'
 import LandingView from './views/LandingView.vue'
 import DocsView from './views/DocsView.vue'
+import ClinicsDashboardView from './views/ClinicsDashboardView.vue'
 
 // Har bir muhim joylarga va funksiyalarga o'zbek tilida komentariya qoldirib ketamiz
 // Global mavzu holati (light yoki dark)
 const theme = ref<'light' | 'dark'>('dark')
 
-// Hash-routing holatini boshqarish (bosh sahifa yoki hujjatlar sahifasi)
-const currentView = ref<'landing' | 'docs'>('landing')
+// Hash-routing holatini boshqarish (bosh sahifa, hujjatlar, yoki klinikalar boshqaruvi)
+const currentView = ref<'landing' | 'docs' | 'clinics'>('landing')
 
 const checkHash = () => {
   if (window.location.hash.startsWith('#/docs') || window.location.hash === '#docs') {
     currentView.value = 'docs'
+  } else if (window.location.hash.startsWith('#/clinics') || window.location.hash === '#clinics') {
+    currentView.value = 'clinics'
   } else {
     currentView.value = 'landing'
   }
@@ -53,6 +56,7 @@ provide('toggleTheme', toggleTheme)
 <template>
   <div class="min-h-screen bg-slate-50 text-slate-900 dark:bg-brand-dark dark:text-slate-100 transition-colors duration-300 font-sans">
     <DocsView v-if="currentView === 'docs'" />
+    <ClinicsDashboardView v-else-if="currentView === 'clinics'" />
     <LandingView v-else />
   </div>
 </template>

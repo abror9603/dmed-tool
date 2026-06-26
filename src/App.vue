@@ -1,47 +1,71 @@
 <script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
-import TheWelcome from './components/TheWelcome.vue'
+import { ref, provide, onMounted } from 'vue'
+import LandingView from './views/LandingView.vue'
+import DocsView from './views/DocsView.vue'
+
+// Har bir muhim joylarga va funksiyalarga o'zbek tilida komentariya qoldirib ketamiz
+// Global mavzu holati (light yoki dark)
+const theme = ref<'light' | 'dark'>('dark')
+
+// Hash-routing holatini boshqarish (bosh sahifa yoki hujjatlar sahifasi)
+const currentView = ref<'landing' | 'docs'>('landing')
+
+const checkHash = () => {
+  if (window.location.hash.startsWith('#/docs') || window.location.hash === '#docs') {
+    currentView.value = 'docs'
+  } else {
+    currentView.value = 'landing'
+  }
+}
+
+// Mavzuni almashtirish funksiyasi
+const toggleTheme = () => {
+  if (theme.value === 'light') {
+    theme.value = 'dark'
+    document.documentElement.classList.add('dark')
+    localStorage.setItem('dmed-theme', 'dark')
+  } else {
+    theme.value = 'light'
+    document.documentElement.classList.remove('dark')
+    localStorage.setItem('dmed-theme', 'light')
+  }
+}
+
+// Komponent yuklanganda saqlangan mavzuni va hash yo'lini aniqlash
+onMounted(() => {
+  checkHash()
+  window.addEventListener('hashchange', checkHash)
+
+  const savedTheme = (localStorage.getItem('dmed-theme') || 'dark') as 'light' | 'dark'
+  theme.value = savedTheme
+  if (savedTheme === 'dark') {
+    document.documentElement.classList.add('dark')
+  } else {
+    document.documentElement.classList.remove('dark')
+  }
+})
+
+// Barcha ichki komponentlar foydalanishi uchun mavzu holati va almashtirish funksiyasini ulashamiz (Provide/Inject)
+provide('theme', theme)
+provide('toggleTheme', toggleTheme)
 </script>
 
 <template>
-  <header>
-    <img alt="Vue logo" class="logo" src="./assets/logo.svg" width="125" height="125" />
-
-    <div class="wrapper">
-      <HelloWorld msg="You did it!" />
-    </div>
-  </header>
-
-  <main>
-    <TheWelcome />
-  </main>
+  <div class="min-h-screen bg-slate-50 text-slate-900 dark:bg-brand-dark dark:text-slate-100 transition-colors duration-300 font-sans">
+    <DocsView v-if="currentView === 'docs'" />
+    <LandingView v-else />
+  </div>
 </template>
 
-<style scoped>
-header {
-  line-height: 1.5;
+<style>
+/* Global animatsiyalar va dizayn elementlari */
+html {
+  scroll-behavior: smooth;
 }
 
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
-}
-
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
+body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
 }
 </style>

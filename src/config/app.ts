@@ -1,3 +1,9 @@
+/**
+ * Application-wide constants and environment helpers.
+ *
+ * Keep cross-cutting config here so services/stores do not hard-code
+ * storage keys or default backend URLs in multiple places.
+ */
 export const STORAGE_KEYS = {
   API_URL: 'dmed-api-url',
   THEME: 'dmed-theme',
@@ -8,6 +14,7 @@ export const STORAGE_KEYS = {
 
 export const DEFAULT_API_URL = 'https://3ed4-185-139-137-95.ngrok-free.app'
 
+/** Strip trailing slash so URL concatenation in the HTTP client stays predictable. */
 export function normalizeApiUrl(url: string): string {
   return url.trim().replace(/\/$/, '')
 }

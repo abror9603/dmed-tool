@@ -3,12 +3,19 @@ import { clinicsService, type ClinicPayload } from './clinics'
 import type { ApplicationType } from '../types/application.types'
 import type { ClinicType } from '../types/clinic.types'
 import { isAxiosError } from 'axios'
+import { buildPageResult, type PaginatedResult } from './api-page'
+import { DEFAULT_PAGE_SIZE } from '../utils/pagination'
 
 export type { ClinicType } from '../types/clinic.types'
 export type { ApplicationType } from '../types/application.types'
 export { CLINIC_TYPES } from '../types/clinic.types'
 
 export type ApplicationStatus = 'PENDING' | 'APPROVED' | 'REJECTED'
+
+export interface ApplicationsQuery {
+  page?: number
+  size?: number
+}
 
 export interface BaseApplicationApplyPayload {
   clinicName: string
@@ -54,6 +61,8 @@ export interface ClinicApplication {
   secretKeyExpiresAt?: string | null
   notes?: string
 }
+
+export type ApplicationsPage = PaginatedResult<ClinicApplication>
 
 interface ApiEnvelope<T> {
   success?: boolean
@@ -168,12 +177,30 @@ export function applicationToClinicPayload(app: ClinicApplication): ClinicPayloa
   }
 }
 
+function parseApplicationsPage(data: unknown, page: number, size: number): ApplicationsPage {
+  return buildPageResult(parseApplicationList(data), data, page, size)
+}
+
+function buildApplicationsParams(
+  status: ApplicationStatus | undefined,
+  query: ApplicationsQuery = {},
+): Record<string, string | number> {
+  const params: Record<string, string | number> = {
+    page: query.page ?? 0,
+    size: query.size ?? DEFAULT_PAGE_SIZE,
+  }
+  if (status) params.status = status
+  return params
+}
+
 export const clinicApplicationsService = {
-  async getAll(status?: ApplicationStatus): Promise<ClinicApplication[]> {
+  async getPage(status?: ApplicationStatus, query: ApplicationsQuery = {}): Promise<ApplicationsPage> {
+    const page = query.page ?? 0
+    const size = query.size ?? DEFAULT_PAGE_SIZE
     const { data } = await apiClient.get<unknown>('/api/v1/clinic-applications', {
-      params: status ? { status } : undefined,
+      params: buildApplicationsParams(status, query),
     })
-    return parseApplicationList(data)
+    return parseApplicationsPage(data, page, size)
   },
 
   async apply(payload: ApplicationApplyPayload): Promise<ClinicApplication> {

@@ -15,11 +15,13 @@ import {
 } from 'lucide-vue-next'
 import AdminAlerts from '../../components/admin/AdminAlerts.vue'
 import AdminRefreshButton from '../../components/admin/AdminRefreshButton.vue'
+import AdminPagination from '../../components/admin/AdminPagination.vue'
 import { useClinicsStore } from '../../stores/clinics'
 import { clinicsService, type Clinic } from '../../services/clinics'
 import { useAdminLabels } from '../../composables/useAdminLabels'
 import { useConfirmDialog } from '../../composables/useConfirmDialog'
 import { getErrorMessage } from '../../utils/errors'
+import { DEFAULT_PAGE_SIZE, rowNumber } from '../../utils/pagination'
 
 const { t } = useI18n()
 const { statusLabel } = useAdminLabels()
@@ -27,6 +29,9 @@ const { confirm, alert: showAlert } = useConfirmDialog()
 const clinicsStore = useClinicsStore()
 
 const clinics = computed(() => clinicsStore.clinics)
+const total = computed(() => clinicsStore.total)
+const currentPage = computed(() => clinicsStore.query.page ?? 0)
+const pageSize = computed(() => clinicsStore.query.size ?? DEFAULT_PAGE_SIZE)
 const loading = computed(() => clinicsStore.loading)
 const error = computed({
   get: () => clinicsStore.error || '',
@@ -78,18 +83,22 @@ function fillEditForm(clinic: Clinic): void {
   formEmail.value = clinic.email
 }
 
-async function fetchClinics(): Promise<void> {
+async function fetchClinics(page?: number): Promise<void> {
   try {
     clinicsStore.clearMessages()
-    await clinicsStore.fetchAllClinics(statusFilter.value)
+    await clinicsStore.fetchAllClinics(statusFilter.value, page)
   } catch {
     // handled in store
   }
 }
 
+async function goToPage(page: number): Promise<void> {
+  await fetchClinics(page)
+}
+
 async function setStatusFilter(status: 'ALL' | 'ACTIVE' | 'INACTIVE'): Promise<void> {
   statusFilter.value = status
-  await fetchClinics()
+  await fetchClinics(0)
 }
 
 async function saveClinic(): Promise<void> {
@@ -299,7 +308,7 @@ onMounted(() => {
           <span>{{ t('clinics.registeredClinics') }}</span>
         </h2>
         <span class="rounded-full bg-slate-800 px-2 py-0.5 font-mono text-[10px] font-semibold text-slate-400">
-          {{ t('clinics.count', { count: clinics.length }) }}
+          {{ t('clinics.count', { count: total }) }}
         </span>
       </div>
 
@@ -338,11 +347,13 @@ onMounted(() => {
           </thead>
           <tbody class="divide-y divide-slate-800/80 text-slate-300">
             <tr
-              v-for="clinic in clinics"
+              v-for="(clinic, index) in clinics"
               :key="clinic.id"
               class="transition-colors hover:bg-slate-800/40"
             >
-              <td class="px-3 py-2 font-mono text-[11px] text-slate-500">#{{ clinic.id }}</td>
+              <td class="px-3 py-2 text-[11px] font-semibold tabular-nums text-slate-400">
+                {{ rowNumber(currentPage, pageSize, index) }}
+              </td>
               <td class="px-3 py-2">
                 <div class="truncate font-semibold text-white" :title="clinic.name">{{ clinic.name }}</div>
                 <div class="mt-0.5 flex items-center gap-1 text-[11px] text-slate-500">
@@ -416,6 +427,14 @@ onMounted(() => {
           </tbody>
         </table>
       </div>
+
+      <AdminPagination
+        :page="currentPage"
+        :total="total"
+        :page-size="pageSize"
+        :loading="loading"
+        @change="goToPage"
+      />
     </div>
   </div>
 </template>

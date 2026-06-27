@@ -1,3 +1,9 @@
+/**
+ * Normalizes thrown values into user-facing error strings.
+ *
+ * Priority: backend `message` field → axios message → caller-provided fallback.
+ * Network failures append the target URL to aid debugging in admin settings scenarios.
+ */
 import { isAxiosError } from 'axios'
 import { getResolvedApiUrl } from '../services/http'
 

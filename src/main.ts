@@ -1,3 +1,7 @@
+/**
+ * Application entry — wires global plugins only; no domain logic here.
+ * Data flow: View → Store → Service → apiClient → Backend
+ */
 import './assets/styles/tailwind.css'
 
 import { createApp } from 'vue'

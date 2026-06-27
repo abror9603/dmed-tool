@@ -7,21 +7,29 @@ const props = defineProps<{
   centerLabel?: string
   centerSubLabel?: string
   hideLegend?: boolean
+  fill?: boolean
 }>()
 
 const chartSegments = computed(() => buildDonutSegments(props.segments))
 
 const rootClass = computed(() => {
+  if (props.fill) {
+    return 'flex h-full w-full items-center gap-5 sm:gap-6'
+  }
   if (props.hideLegend) {
     return 'inline-flex shrink-0'
   }
   return 'inline-flex items-center gap-4 sm:gap-5'
 })
+
+const chartSizeClass = computed(() =>
+  props.fill ? 'h-32 w-32 shrink-0 sm:h-36 sm:w-36' : 'h-28 w-28 shrink-0 sm:h-[7.5rem] sm:w-[7.5rem]',
+)
 </script>
 
 <template>
   <div :class="rootClass">
-    <div class="relative h-28 w-28 shrink-0 sm:h-[7.5rem] sm:w-[7.5rem]">
+    <div class="relative shrink-0" :class="chartSizeClass">
       <svg viewBox="0 0 100 100" class="h-full w-full -rotate-90">
         <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(148,163,184,0.15)" stroke-width="10" />
         <circle
@@ -52,15 +60,19 @@ const rootClass = computed(() => {
       </div>
     </div>
 
-    <ul v-if="!hideLegend" class="min-w-[9.5rem] shrink-0 space-y-1.5">
+    <ul v-if="!hideLegend" class="min-w-0 shrink-0 space-y-2.5">
       <li
         v-for="segment in chartSegments"
         :key="`legend-${segment.key}`"
-        class="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2 text-xs"
+        class="flex items-center justify-between gap-4 text-sm"
       >
-        <span class="h-2.5 w-2.5 shrink-0 rounded-full" :style="{ backgroundColor: segment.color }" />
-        <span class="truncate text-slate-300">{{ segment.key }}</span>
-        <span class="font-bold tabular-nums text-white">{{ segment.value }}</span>
+        <span class="flex min-w-0 items-center gap-2">
+          <span class="h-2.5 w-2.5 shrink-0 rounded-full" :style="{ backgroundColor: segment.color }" />
+          <span class="truncate text-slate-300">{{ segment.key }}</span>
+        </span>
+        <span class="shrink-0 font-bold tabular-nums" :style="{ color: segment.color }">
+          {{ segment.value }}
+        </span>
       </li>
     </ul>
   </div>

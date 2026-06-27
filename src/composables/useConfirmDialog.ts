@@ -1,3 +1,9 @@
+/**
+ * Promise-based confirm/alert dialog driven by module-level state.
+ *
+ * A single global resolver avoids mounting multiple modal instances per view.
+ * Only one dialog can be open at a time; concurrent calls resolve to `false`.
+ */
 import { reactive, readonly } from 'vue'
 
 export type ConfirmVariant = 'default' | 'success' | 'danger' | 'warning'

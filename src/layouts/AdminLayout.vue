@@ -11,8 +11,6 @@ import {
   X,
   ClipboardList,
   Users,
-  Activity,
-  FlaskConical,
 } from 'lucide-vue-next'
 import { useAdminLocale } from '../composables/useAdminLocale'
 import AdminConfirmDialog from '../components/admin/AdminConfirmDialog.vue'
@@ -25,27 +23,12 @@ const route = useRoute()
 const authStore = useAuthStore()
 const sidebarOpen = ref(false)
 
-const mainNav = computed(() => [
+const sidebarNav = computed(() => [
   {
     name: ROUTE_NAMES.ADMIN_DASHBOARD,
     label: t('admin.dashboard'),
     icon: LayoutDashboard,
     to: { name: ROUTE_NAMES.ADMIN_DASHBOARD },
-  },
-])
-
-const manageNav = computed(() => [
-  {
-    name: ROUTE_NAMES.ADMIN_MEDICAL_EVENTS,
-    label: t('admin.medicalEvents'),
-    icon: Activity,
-    to: { name: ROUTE_NAMES.ADMIN_MEDICAL_EVENTS },
-  },
-  {
-    name: ROUTE_NAMES.ADMIN_LAB_INTAKE,
-    label: t('admin.labIntake'),
-    icon: FlaskConical,
-    to: { name: ROUTE_NAMES.ADMIN_LAB_INTAKE },
   },
   {
     name: ROUTE_NAMES.ADMIN_CLINICS,
@@ -121,51 +104,23 @@ function isActive(name: string): boolean {
         </button>
       </div>
 
-      <nav class="flex-1 space-y-6 overflow-y-auto p-4">
-        <div>
-          <p class="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
-            {{ t('admin.navMain') }}
-          </p>
-          <div class="space-y-1">
-            <RouterLink
-              v-for="item in mainNav"
-              :key="item.name"
-              :to="item.to"
-              class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors"
-              :class="
-                isActive(item.name)
-                  ? 'border-l-2 border-cyan-400 bg-cyan-500/10 text-cyan-300'
-                  : 'text-slate-400 hover:bg-slate-800/80 hover:text-white'
-              "
-              @click="closeSidebarOnMobile"
-            >
-              <component :is="item.icon" class="h-4.5 w-4.5 shrink-0" />
-              <span>{{ item.label }}</span>
-            </RouterLink>
-          </div>
-        </div>
-
-        <div>
-          <p class="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
-            {{ t('admin.navManage') }}
-          </p>
-          <div class="space-y-1">
-            <RouterLink
-              v-for="item in manageNav"
-              :key="item.name"
-              :to="item.to"
-              class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors"
-              :class="
-                isActive(item.name)
-                  ? 'border-l-2 border-cyan-400 bg-cyan-500/10 text-cyan-300'
-                  : 'text-slate-400 hover:bg-slate-800/80 hover:text-white'
-              "
-              @click="closeSidebarOnMobile"
-            >
-              <component :is="item.icon" class="h-4.5 w-4.5 shrink-0" />
-              <span>{{ item.label }}</span>
-            </RouterLink>
-          </div>
+      <nav class="flex-1 overflow-y-auto p-4">
+        <div class="space-y-1">
+          <RouterLink
+            v-for="item in sidebarNav"
+            :key="item.name"
+            :to="item.to"
+            class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors"
+            :class="
+              isActive(item.name)
+                ? 'border-l-2 border-cyan-400 bg-cyan-500/10 text-cyan-300'
+                : 'text-slate-400 hover:bg-slate-800/80 hover:text-white'
+            "
+            @click="closeSidebarOnMobile"
+          >
+            <component :is="item.icon" class="h-4.5 w-4.5 shrink-0" />
+            <span>{{ item.label }}</span>
+          </RouterLink>
         </div>
       </nav>
 
@@ -204,7 +159,7 @@ function isActive(name: string): boolean {
             <Menu class="h-5 w-5" />
           </button>
           <h1 class="min-w-0 truncate text-base font-extrabold text-white">
-            {{ manageNav.find((item) => item.name === route.name)?.label ?? mainNav[0]?.label }}
+            {{ sidebarNav.find((item) => item.name === route.name)?.label ?? sidebarNav[0]?.label }}
           </h1>
         </div>
       </header>

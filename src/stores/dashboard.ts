@@ -1,3 +1,9 @@
+/**
+ * Dashboard store — owns stats fetch lifecycle and the 60s auto-refresh timer.
+ *
+ * Views call `init()` on mount and `destroy()` on unmount to prevent orphaned intervals.
+ * Silent refresh avoids toggling the global loading spinner during background polls.
+ */
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { i18n } from '../i18n'

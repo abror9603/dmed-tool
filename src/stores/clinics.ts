@@ -1,12 +1,20 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { i18n } from '../i18n'
-import { clinicsService, type ClinicPayload } from '../services/clinics'
+import { clinicsService, type ClinicPayload, type ClinicsQuery } from '../services/clinics'
+import { DEFAULT_PAGE_SIZE } from '../utils/pagination'
 import { getErrorMessage } from '../utils/errors'
 
+const DEFAULT_QUERY: ClinicsQuery = {
+  page: 0,
+  size: DEFAULT_PAGE_SIZE,
+}
+
 export const useClinicsStore = defineStore('clinics', () => {
-  const clinics = ref<Awaited<ReturnType<typeof clinicsService.getAll>>>([])
+  const clinics = ref<Awaited<ReturnType<typeof clinicsService.getPage>>['items']>([])
   const statusFilter = ref<'ACTIVE' | 'INACTIVE' | 'ALL'>('ALL')
+  const query = ref<ClinicsQuery>({ ...DEFAULT_QUERY })
+  const total = ref(0)
   const loading = ref(false)
   const error = ref<string | null>(null)
   const successMessage = ref<string | null>(null)
@@ -16,19 +24,28 @@ export const useClinicsStore = defineStore('clinics', () => {
     successMessage.value = null
   }
 
-  const fetchAllClinics = async (status?: 'ACTIVE' | 'INACTIVE' | 'ALL') => {
+  const fetchAllClinics = async (
+    status?: 'ACTIVE' | 'INACTIVE' | 'ALL',
+    page?: number,
+  ) => {
     if (status) {
       statusFilter.value = status
+    }
+    if (page !== undefined) {
+      query.value.page = page
     }
 
     loading.value = true
     error.value = null
     try {
-      const data =
+      const result =
         statusFilter.value === 'ACTIVE' || statusFilter.value === 'INACTIVE'
-          ? await clinicsService.getByStatus(statusFilter.value)
-          : await clinicsService.getAll()
-      clinics.value = Array.isArray(data) ? data : []
+          ? await clinicsService.getPageByStatus(statusFilter.value, query.value)
+          : await clinicsService.getPage(query.value)
+      clinics.value = result.items
+      total.value = result.total
+      query.value.page = result.page
+      query.value.size = result.size
     } catch (err) {
       error.value = getErrorMessage(err, i18n.global.t('errors.clinicsLoad'))
       throw err
@@ -100,6 +117,8 @@ export const useClinicsStore = defineStore('clinics', () => {
   return {
     clinics,
     statusFilter,
+    query,
+    total,
     loading,
     error,
     successMessage,

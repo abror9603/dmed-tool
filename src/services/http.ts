@@ -1,14 +1,25 @@
+/**
+ * Shared Axios client — single entry point for all backend HTTP traffic.
+ *
+ * Architecture:
+ * - Services import `apiClient` only; views/stores never call axios directly.
+ * - Base URL resolution is dynamic: admin settings → dev proxy → env fallback.
+ * - Auth token injection and 401 handling live here to avoid duplicating interceptors.
+ */
 import axios from 'axios'
 import { DEFAULT_API_URL, STORAGE_KEYS, normalizeApiUrl } from '../config/app'
 import { authSession } from './session'
 
+/**
+ * Resolves the API base URL for outgoing requests.
+ * In dev, returns '' so requests hit the Vite proxy (same-origin, no CORS/ngrok issues).
+ */
 export function getApiUrl(): string {
   const stored = localStorage.getItem(STORAGE_KEYS.API_URL)
   if (stored?.trim()) {
     return normalizeApiUrl(stored)
   }
 
-  // Dev: same-origin requests via Vite proxy (avoids CORS / ngrok browser issues)
   if (import.meta.env.DEV) {
     return ''
   }
@@ -16,6 +27,7 @@ export function getApiUrl(): string {
   return normalizeApiUrl(DEFAULT_API_URL)
 }
 
+/** Used by error messages when the request never reached the server. */
 export function getResolvedApiUrl(): string {
   const base = getApiUrl()
   return base || normalizeApiUrl(import.meta.env.VITE_API_URL || DEFAULT_API_URL)
@@ -45,8 +57,10 @@ apiClient.interceptors.response.use(
   async (error) => {
     const isLoginRequest = error.config?.url?.includes('/sdg/uz/login')
 
+    // Global session expiry: clear credentials and redirect unless login itself failed.
     if (error.response?.status === 401 && !isLoginRequest) {
       authSession.clearSession()
+      // Lazy import breaks the circular dependency: http → router → stores → http.
       const { default: router, ROUTE_NAMES } = await import('../router')
       if (router.currentRoute.value.name !== ROUTE_NAMES.LOGIN) {
         await router.push({ name: ROUTE_NAMES.LOGIN })

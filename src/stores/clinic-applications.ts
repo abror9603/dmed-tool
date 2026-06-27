@@ -6,23 +6,35 @@ import {
   isLabApplication,
   type ApplicationStatus,
   type ApplicationApplyPayload,
+  type ApplicationsQuery,
 } from '../services/clinic-applications'
 import { useClinicsStore } from './clinics'
+import { DEFAULT_PAGE_SIZE } from '../utils/pagination'
 import { getErrorMessage } from '../utils/errors'
 
+const DEFAULT_QUERY: ApplicationsQuery = {
+  page: 0,
+  size: DEFAULT_PAGE_SIZE,
+}
+
 export const useClinicApplicationsStore = defineStore('clinicApplications', () => {
-  const applications = ref<Awaited<ReturnType<typeof clinicApplicationsService.getAll>>>([])
+  const applications = ref<Awaited<ReturnType<typeof clinicApplicationsService.getPage>>['items']>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
   const successMessage = ref<string | null>(null)
   const statusFilter = ref<ApplicationStatus | 'ALL'>('ALL')
+  const query = ref<ApplicationsQuery>({ ...DEFAULT_QUERY })
+  const total = ref(0)
 
   function clearMessages(): void {
     error.value = null
     successMessage.value = null
   }
 
-  async function fetchApplications(status?: ApplicationStatus | 'ALL'): Promise<void> {
+  async function fetchApplications(
+    status?: ApplicationStatus | 'ALL',
+    page?: number,
+  ): Promise<void> {
     loading.value = true
     error.value = null
 
@@ -30,12 +42,19 @@ export const useClinicApplicationsStore = defineStore('clinicApplications', () =
     if (status) {
       statusFilter.value = status
     }
+    if (page !== undefined) {
+      query.value.page = page
+    }
 
     try {
-      const data = await clinicApplicationsService.getAll(
+      const result = await clinicApplicationsService.getPage(
         filter === 'ALL' ? undefined : filter,
+        query.value,
       )
-      applications.value = Array.isArray(data) ? data : []
+      applications.value = result.items
+      total.value = result.total
+      query.value.page = result.page
+      query.value.size = result.size
     } catch (err) {
       error.value = getErrorMessage(err, i18n.global.t('errors.applicationsLoad'))
       throw err
@@ -104,6 +123,8 @@ export const useClinicApplicationsStore = defineStore('clinicApplications', () =
     error,
     successMessage,
     statusFilter,
+    query,
+    total,
     clearMessages,
     fetchApplications,
     submitApplication,

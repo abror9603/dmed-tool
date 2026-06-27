@@ -1,3 +1,9 @@
+/**
+ * Auth store — orchestrates login/logout and mirrors `authSession` into reactive state.
+ *
+ * `syncFromSession()` is called on every route change so hard refreshes and
+ * interceptor-driven logouts stay consistent with Pinia.
+ */
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import router, { ROUTE_NAMES } from '../router'

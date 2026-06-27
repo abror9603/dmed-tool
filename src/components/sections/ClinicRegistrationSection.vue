@@ -6,7 +6,9 @@ import ClinicApplicationForm from '../forms/ClinicApplicationForm.vue'
 import {
   clinicApplicationsService,
   type ApplicationApplyPayload,
+  type LabApplicationApplyPayload,
 } from '../../services/clinic-applications'
+import { buildLabRegisterPayload, labsService } from '../../services/labs'
 import { getErrorMessage } from '../../utils/errors'
 
 const { t } = useI18n()
@@ -22,8 +24,13 @@ async function handleSubmit(payload: ApplicationApplyPayload): Promise<void> {
   success.value = null
 
   try {
-    await clinicApplicationsService.apply(payload)
-    success.value = t('registration.success')
+    if (payload.applicationType === 'LAB') {
+      await labsService.create(buildLabRegisterPayload(payload as LabApplicationApplyPayload))
+      success.value = t('labRegistration.success')
+    } else {
+      await clinicApplicationsService.apply(payload)
+      success.value = t('registration.success')
+    }
     formRef.value?.resetForm()
   } catch (err) {
     error.value = getErrorMessage(err, t('registration.failed'))

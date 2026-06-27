@@ -16,6 +16,7 @@ const AdminLayout = () => import('../layouts/AdminLayout.vue')
 const AdminDashboardView = () => import('../views/admin/AdminDashboardView.vue')
 const AdminApplicationsView = () => import('../views/admin/AdminApplicationsView.vue')
 const AdminClinicsView = () => import('../views/admin/AdminClinicsView.vue')
+const AdminLabsView = () => import('../views/admin/AdminLabsView.vue')
 const AdminUsersView = () => import('../views/admin/AdminUsersView.vue')
 const AdminSettingsView = () => import('../views/admin/AdminSettingsView.vue')
 
@@ -27,6 +28,7 @@ export const ROUTE_NAMES = {
   ADMIN_DASHBOARD: 'admin-dashboard',
   ADMIN_APPLICATIONS: 'admin-applications',
   ADMIN_CLINICS: 'admin-clinics',
+  ADMIN_LABS: 'admin-labs',
   ADMIN_USERS: 'admin-users',
   ADMIN_SETTINGS: 'admin-settings',
   /** @deprecated Use ADMIN_CLINICS */
@@ -88,6 +90,11 @@ const router = createRouter({
           component: AdminClinicsView,
         },
         {
+          path: 'labs',
+          name: ROUTE_NAMES.ADMIN_LABS,
+          component: AdminLabsView,
+        },
+        {
           path: 'users',
           name: ROUTE_NAMES.ADMIN_USERS,
           component: AdminUsersView,
@@ -116,20 +123,27 @@ const router = createRouter({
   },
 })
 
-router.beforeEach((to) => {
+router.beforeEach(async (to) => {
   const authStore = useAuthStore()
-  // Rehydrate Pinia from localStorage before evaluating guards (handles F5 on /admin/*).
   authStore.syncFromSession()
 
-  if (to.matched.some((record) => record.meta.requiresAuth) && !authStore.isAuthenticated) {
-    return {
-      name: ROUTE_NAMES.LOGIN,
-      query: { redirect: to.fullPath },
+  if (to.matched.some((record) => record.meta.requiresAuth)) {
+    const restored = await authStore.restoreSession()
+    if (!restored) {
+      return {
+        name: ROUTE_NAMES.LOGIN,
+        query: { redirect: to.fullPath },
+      }
     }
   }
 
-  if (to.meta.guestOnly && authStore.isAuthenticated) {
-    return { name: ROUTE_NAMES.ADMIN_DASHBOARD }
+  if (to.meta.guestOnly) {
+    if (!authStore.isAuthenticated) {
+      await authStore.restoreSession()
+    }
+    if (authStore.isAuthenticated) {
+      return { name: ROUTE_NAMES.ADMIN_DASHBOARD }
+    }
   }
 })
 

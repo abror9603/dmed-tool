@@ -7,6 +7,7 @@
 export const STORAGE_KEYS = {
   API_URL: 'dmed-api-url',
   THEME: 'dmed-theme',
+  /** @deprecated Token is stored in an HttpOnly cookie; kept for legacy cleanup only. */
   AUTH_TOKEN: 'dmed-auth-token',
   AUTH_USER: 'dmed-auth-user',
   LOCALE: 'dmed-locale',

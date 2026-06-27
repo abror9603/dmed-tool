@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n'
 import {
   LayoutDashboard,
   Hospital,
+  FlaskConical,
   Settings,
   LogOut,
   Menu,
@@ -37,6 +38,12 @@ const sidebarNav = computed(() => [
     label: t('admin.clinics'),
     icon: Hospital,
     to: { name: ROUTE_NAMES.ADMIN_CLINICS },
+  },
+  {
+    name: ROUTE_NAMES.ADMIN_LABS,
+    label: t('admin.labs'),
+    icon: FlaskConical,
+    to: { name: ROUTE_NAMES.ADMIN_LABS },
   },
   {
     name: ROUTE_NAMES.ADMIN_APPLICATIONS,

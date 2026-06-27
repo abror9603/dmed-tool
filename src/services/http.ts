@@ -1,27 +1,24 @@
 /**
  * Shared Axios client — single entry point for all backend HTTP traffic.
  *
- * Architecture:
- * - Services import `apiClient` only; views/stores never call axios directly.
- * - Base URL resolution is dynamic: admin settings → dev proxy → env fallback.
- * - Auth token injection and 401 handling live here to avoid duplicating interceptors.
+ * Auth: HttpOnly cookie (same-origin). The Vite auth proxy attaches Bearer tokens upstream.
  */
 import axios from 'axios'
 import { DEFAULT_API_URL, STORAGE_KEYS, normalizeApiUrl } from '../config/app'
 import { authSession } from './session'
 
 /**
- * Resolves the API base URL for outgoing requests.
- * In dev, returns '' so requests hit the Vite proxy (same-origin, no CORS/ngrok issues).
+ * API requests are same-origin so the auth proxy can read the HttpOnly cookie.
+ * The stored admin API URL is kept for display / future server-side proxy config only.
  */
 export function getApiUrl(): string {
+  if (import.meta.env.DEV || import.meta.env.VITE_AUTH_COOKIE_PROXY === 'true') {
+    return ''
+  }
+
   const stored = localStorage.getItem(STORAGE_KEYS.API_URL)
   if (stored?.trim()) {
     return normalizeApiUrl(stored)
-  }
-
-  if (import.meta.env.DEV) {
-    return ''
   }
 
   return normalizeApiUrl(DEFAULT_API_URL)
@@ -34,6 +31,7 @@ export function getResolvedApiUrl(): string {
 }
 
 export const apiClient = axios.create({
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
     'ngrok-skip-browser-warning': 'true',
@@ -42,13 +40,8 @@ export const apiClient = axios.create({
 
 apiClient.interceptors.request.use((config) => {
   const path = config.url ?? ''
-  config.url = `${getApiUrl()}${path}`
-
-  const token = authSession.getToken()
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
-  }
-
+  const base = getApiUrl()
+  config.url = base ? `${base}${path}` : path
   return config
 })
 
@@ -56,14 +49,31 @@ apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     const isLoginRequest = error.config?.url?.includes('/sdg/uz/login')
+    const isSessionRequest = error.config?.url?.includes('/__auth/session')
 
-    // Global session expiry: clear credentials and redirect unless login itself failed.
-    if (error.response?.status === 401 && !isLoginRequest) {
-      authSession.clearSession()
-      // Lazy import breaks the circular dependency: http → router → stores → http.
-      const { default: router, ROUTE_NAMES } = await import('../router')
-      if (router.currentRoute.value.name !== ROUTE_NAMES.LOGIN) {
-        await router.push({ name: ROUTE_NAMES.LOGIN })
+    const unauthorized = error.response?.status === 401 || error.response?.status === 403
+
+    if (unauthorized && !isLoginRequest && !isSessionRequest) {
+      let sessionValid = false
+      try {
+        const { data } = await apiClient.get<{ authenticated?: boolean }>('/__auth/session')
+        sessionValid = data?.authenticated === true
+      } catch {
+        sessionValid = false
+      }
+
+      if (!sessionValid) {
+        authSession.clearUser()
+        try {
+          await apiClient.post('/__auth/logout')
+        } catch {
+          // Cookie may already be cleared upstream.
+        }
+
+        const { default: router, ROUTE_NAMES } = await import('../router')
+        if (router.currentRoute.value.name !== ROUTE_NAMES.LOGIN) {
+          await router.push({ name: ROUTE_NAMES.LOGIN })
+        }
       }
     }
 

@@ -3,6 +3,7 @@ import { computed, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   Building2,
+  ChevronDown,
   Eye,
   EyeOff,
   Loader2,
@@ -13,6 +14,12 @@ import {
 } from 'lucide-vue-next'
 import type { ApplicationApplyPayload } from '../../services/clinic-applications'
 import { CLINIC_TYPES, type ClinicType } from '../../types/clinic.types'
+import {
+  extractUzPhoneDigits,
+  isValidUzPhone,
+  uzPhoneSuffix,
+  UZ_PHONE_PREFIX,
+} from '../../utils/uz-phone'
 
 type OrgType = ClinicType | 'LAB' | ''
 
@@ -66,8 +73,6 @@ const touched = reactive({
 
 const isLab = computed(() => form.clinicType === 'LAB')
 
-const phonePattern = /^\+?[0-9\s()-]{9,20}$/
-
 const fieldErrors = computed(() => ({
   clinicName: touched.clinicName && !form.clinicName.trim() ? t('registration.clinicNameRequired') : '',
   clinicType: touched.clinicType && !form.clinicType ? t('registration.clinicTypeRequired') : '',
@@ -76,13 +81,13 @@ const fieldErrors = computed(() => ({
   login: touched.login && !form.login.trim() ? t('registration.loginRequired') : '',
   password: touched.password && !form.password ? t('registration.passwordRequired') : '',
   phoneNumber1:
-    touched.phoneNumber1 && !phonePattern.test(form.phoneNumber1.trim())
+    touched.phoneNumber1 && !isValidUzPhone(form.phoneNumber1)
       ? t('registration.phoneInvalid')
       : '',
   phoneNumber2:
     !isLab.value &&
     touched.phoneNumber2 &&
-    !phonePattern.test(form.phoneNumber2.trim())
+    !isValidUzPhone(form.phoneNumber2)
       ? t('registration.phoneInvalid')
       : '',
 }))
@@ -95,12 +100,45 @@ const isValid = computed(() => {
     form.lastName.trim() &&
     form.login.trim() &&
     form.password &&
-    phonePattern.test(form.phoneNumber1.trim())
+    isValidUzPhone(form.phoneNumber1)
 
   if (isLab.value) return Boolean(baseValid)
 
-  return Boolean(baseValid && phonePattern.test(form.phoneNumber2.trim()))
+  return Boolean(baseValid && isValidUzPhone(form.phoneNumber2))
 })
+
+function onPhoneSuffixInput(event: Event, field: 'phoneNumber1' | 'phoneNumber2'): void {
+  const target = event.target as HTMLInputElement
+  const digits = extractUzPhoneDigits(target.value)
+  form[field] = `${UZ_PHONE_PREFIX}${digits}`
+  target.value = digits
+}
+
+function onPhoneKeydown(event: KeyboardEvent): void {
+  if (event.ctrlKey || event.metaKey) return
+
+  const allowed = ['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'Home', 'End']
+  if (allowed.includes(event.key)) return
+
+  if (!/^\d$/.test(event.key)) {
+    event.preventDefault()
+  }
+}
+
+function onPhonePaste(event: ClipboardEvent, field: 'phoneNumber1' | 'phoneNumber2'): void {
+  event.preventDefault()
+  const target = event.target as HTMLInputElement
+  const pasted = event.clipboardData?.getData('text') ?? ''
+  const digits = extractUzPhoneDigits(`${target.value}${pasted}`)
+  form[field] = `${UZ_PHONE_PREFIX}${digits}`
+  target.value = digits
+}
+
+function onPhoneFocus(field: 'phoneNumber1' | 'phoneNumber2'): void {
+  if (!form[field]) {
+    form[field] = UZ_PHONE_PREFIX
+  }
+}
 
 function touchAll(): void {
   Object.keys(touched).forEach((key) => {
@@ -195,20 +233,26 @@ defineExpose({ resetForm })
         <label for="clinicType" class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
           {{ t('registration.clinicType') }}
         </label>
-        <select
-          id="clinicType"
-          v-model="form.clinicType"
-          required
-          class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition-colors focus:border-brand-primary dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-100"
-          :class="fieldErrors.clinicType ? 'border-red-400' : ''"
-          :disabled="props.loading"
-          @blur="touched.clinicType = true"
-        >
-          <option value="" disabled>{{ t('registration.clinicTypePlaceholder') }}</option>
-          <option v-for="type in REGISTRATION_TYPES" :key="type" :value="type">
-            {{ t(`registration.clinicTypes.${type}`) }}
-          </option>
-        </select>
+        <div class="relative">
+          <select
+            id="clinicType"
+            v-model="form.clinicType"
+            required
+            class="w-full appearance-none rounded-xl border border-slate-200 bg-white py-3 pl-4 pr-11 text-sm outline-none transition-colors focus:border-brand-primary dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-100"
+            :class="fieldErrors.clinicType ? 'border-red-400' : ''"
+            :disabled="props.loading"
+            @blur="touched.clinicType = true"
+          >
+            <option value="" disabled>{{ t('registration.clinicTypePlaceholder') }}</option>
+            <option v-for="type in REGISTRATION_TYPES" :key="type" :value="type">
+              {{ t(`registration.clinicTypes.${type}`) }}
+            </option>
+          </select>
+          <ChevronDown
+            class="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500"
+            aria-hidden="true"
+          />
+        </div>
         <p v-if="fieldErrors.clinicType" class="text-xs text-red-500">{{ fieldErrors.clinicType }}</p>
       </div>
 
@@ -314,15 +358,24 @@ defineExpose({ resetForm })
         </label>
         <div class="relative">
           <Phone class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <span class="pointer-events-none absolute left-10 top-1/2 -translate-y-1/2 text-sm font-medium text-slate-500 dark:text-slate-400">
+            +998
+          </span>
           <input
             id="phoneNumber1"
-            v-model="form.phoneNumber1"
+            :value="uzPhoneSuffix(form.phoneNumber1)"
             type="tel"
             required
-            :placeholder="t('registration.phonePlaceholder')"
-            class="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-4 text-sm outline-none transition-colors focus:border-brand-primary dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-100"
+            inputmode="numeric"
+            maxlength="9"
+            :placeholder="t('registration.phoneSuffixPlaceholder')"
+            class="w-full rounded-xl border border-slate-200 bg-white py-3 pl-[4.75rem] pr-4 text-sm tracking-wide outline-none transition-colors focus:border-brand-primary dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-100"
             :class="fieldErrors.phoneNumber1 ? 'border-red-400' : ''"
             :disabled="props.loading"
+            @input="onPhoneSuffixInput($event, 'phoneNumber1')"
+            @keydown="onPhoneKeydown"
+            @paste="onPhonePaste($event, 'phoneNumber1')"
+            @focus="onPhoneFocus('phoneNumber1')"
             @blur="touched.phoneNumber1 = true"
           />
         </div>
@@ -335,15 +388,24 @@ defineExpose({ resetForm })
         </label>
         <div class="relative">
           <Phone class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <span class="pointer-events-none absolute left-10 top-1/2 -translate-y-1/2 text-sm font-medium text-slate-500 dark:text-slate-400">
+            +998
+          </span>
           <input
             id="phoneNumber2"
-            v-model="form.phoneNumber2"
+            :value="uzPhoneSuffix(form.phoneNumber2)"
             type="tel"
             required
-            :placeholder="t('registration.phonePlaceholder')"
-            class="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-4 text-sm outline-none transition-colors focus:border-brand-primary dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-100"
+            inputmode="numeric"
+            maxlength="9"
+            :placeholder="t('registration.phoneSuffixPlaceholder')"
+            class="w-full rounded-xl border border-slate-200 bg-white py-3 pl-[4.75rem] pr-4 text-sm tracking-wide outline-none transition-colors focus:border-brand-primary dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-100"
             :class="fieldErrors.phoneNumber2 ? 'border-red-400' : ''"
             :disabled="props.loading"
+            @input="onPhoneSuffixInput($event, 'phoneNumber2')"
+            @keydown="onPhoneKeydown"
+            @paste="onPhonePaste($event, 'phoneNumber2')"
+            @focus="onPhoneFocus('phoneNumber2')"
             @blur="touched.phoneNumber2 = true"
           />
         </div>

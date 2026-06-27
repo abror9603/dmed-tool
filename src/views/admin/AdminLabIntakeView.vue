@@ -207,7 +207,7 @@ async function submitIntake(): Promise<void> {
               v-model="familyDoctorPhone"
               type="tel"
               required
-              :placeholder="t('registration.phonePlaceholder')"
+              :placeholder="t('registration.phoneSuffixPlaceholder')"
               class="w-full rounded-lg border border-slate-700 bg-slate-900/60 py-2 pl-9 pr-3 text-xs text-slate-200"
             />
           </div>

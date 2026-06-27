@@ -1,3 +1,6 @@
+/**
+ * Clinics store — admin clinic list with status filter and pagination.
+ */
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { i18n } from '../i18n'

@@ -1,3 +1,6 @@
+/**
+ * Users store — admin user list filters, pagination, and CRUD orchestration.
+ */
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { i18n } from '../i18n'

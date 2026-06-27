@@ -1,3 +1,6 @@
+/**
+ * Admin label helpers — map backend enum codes to localized display strings.
+ */
 import { useI18n } from 'vue-i18n'
 
 export function useAdminLabels() {

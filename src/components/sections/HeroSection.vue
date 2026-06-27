@@ -9,23 +9,17 @@ const { heroCtas } = useLandingContent()
 
 <template>
   <section class="relative overflow-hidden py-20 lg:py-28 transition-colors duration-300 bg-slate-50 dark:bg-brand-dark">
-    
-    <!-- Orqa fondagi yorqin radial dog'lar (Glows) -->
     <div class="absolute top-0 left-1/4 w-[500px] h-[500px] bg-brand-primary/10 rounded-full blur-[120px] pointer-events-none"></div>
     <div class="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-brand-secondary/10 rounded-full blur-[100px] pointer-events-none"></div>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
-        
-        <!-- Chap ustun: Sarlavha, Ta'rif va CTA tugmalari (Lg: 5/12) -->
         <div 
           v-motion
           :initial="{ opacity: 0, y: 30 }"
           :enter="{ opacity: 1, y: 0, transition: { duration: 800 } }"
           class="lg:col-span-5 space-y-6 text-center lg:text-left"
         >
-          
-          <!-- Asosiy sarlavha -->
           <h1 class="text-4xl sm:text-5xl font-black tracking-tight text-slate-900 dark:text-white leading-[1.15]">
             {{ t('hero.headline') }}
             <span class="bg-gradient-to-r from-brand-primary via-blue-500 to-brand-secondary bg-clip-text text-transparent">
@@ -63,15 +57,12 @@ const { heroCtas } = useLandingContent()
 
         </div>
 
-        <!-- O'ng ustun: Namuna asosidagi vizual qatlamlar (Lg: 7/12) -->
         <div 
           v-motion
           :initial="{ opacity: 0, scale: 0.95 }"
           :enter="{ opacity: 1, scale: 1, transition: { duration: 1000, delay: 200 } }"
           class="lg:col-span-7 relative flex items-center justify-center pt-8 lg:pt-0"
         >
-          
-          <!-- Asosiy markaziy katta rasm (DMED App Mockup) -->
           <div class="relative w-full max-w-[580px] aspect-[4/3] rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.4)] border border-slate-200/60 bg-white dark:border-slate-800/60 dark:bg-slate-950/60 p-2 overflow-hidden transition-all duration-300 group hover:-translate-y-1">
             <div class="w-full h-full rounded-xl overflow-hidden bg-slate-900 relative">
               <img 
@@ -83,7 +74,6 @@ const { heroCtas } = useLandingContent()
             </div>
           </div>
 
-          <!-- 1-katlam: Shifokor Kalendari Vidjeti (Top-Left) -->
           <div 
             v-motion
             :initial="{ opacity: 0, x: -40, y: -20 }"
@@ -99,8 +89,6 @@ const { heroCtas } = useLandingContent()
               </div>
               <span class="inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
             </div>
-            
-            <!-- Shifokor jadvali qatori -->
             <div class="space-y-2">
               <div class="flex items-center justify-between p-2 rounded-lg bg-slate-100/50 dark:bg-slate-800/50 border border-slate-200/50 dark:border-slate-700/50">
                 <div>
@@ -109,8 +97,6 @@ const { heroCtas } = useLandingContent()
                 </div>
                 <span class="text-[8px] sm:text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">{{ t('hero.widgets.active') }}</span>
               </div>
-              
-              <!-- Oddiy kalendar mini-seti -->
               <div class="grid grid-cols-7 gap-1 text-[8px] sm:text-[10px] text-center font-medium text-slate-400">
                 <span>D</span><span>S</span><span>Ch</span><span>P</span><span>J</span><span class="text-brand-primary font-bold">Shan</span><span>Y</span>
                 <span class="text-slate-300 dark:text-slate-700">22</span>
@@ -124,7 +110,6 @@ const { heroCtas } = useLandingContent()
             </div>
           </div>
 
-          <!-- 2-katlam: SMS Bildirishnoma Vidjeti (Bottom-Left) -->
           <div 
             v-motion
             :initial="{ opacity: 0, x: -30, y: 30 }"
@@ -151,7 +136,6 @@ const { heroCtas } = useLandingContent()
             </div>
           </div>
 
-          <!-- 3-katlam: Shifokor va Bemor xonadondagi ko'rigi (Bottom-Right / Top-Right) -->
           <div 
             v-motion
             :initial="{ opacity: 0, x: 40, y: 20 }"
@@ -183,7 +167,7 @@ const { heroCtas } = useLandingContent()
 </template>
 
 <style scoped>
-/* float animatsiyasi orqali vidjetlar biroz tebranib turadi, bu loyihaga hayotiylik bag'ishlaydi */
+/* Subtle float on the schedule widget for visual depth. */
 .animate-float {
   animation: float 6s ease-in-out infinite;
 }

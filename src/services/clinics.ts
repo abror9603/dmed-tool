@@ -1,3 +1,6 @@
+/**
+ * Clinics API — paginated list and CRUD with envelope-aware response parsing.
+ */
 import { apiClient } from './http'
 import { buildPageResult, type PaginatedResult } from './api-page'
 import {

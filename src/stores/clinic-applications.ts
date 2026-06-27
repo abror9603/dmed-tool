@@ -1,3 +1,6 @@
+/**
+ * Clinic applications store — pending queue, approve/reject, and secret-key modal flow.
+ */
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { i18n } from '../i18n'

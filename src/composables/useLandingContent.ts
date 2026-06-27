@@ -1,3 +1,6 @@
+/**
+ * Landing page i18n bindings — hero CTAs and workflow steps from locale files.
+ */
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { WorkflowStep } from '../types/landing.types'

@@ -1,3 +1,6 @@
+/**
+ * Users API — list, CRUD, and defensive parsing for legacy field names (`userName`, `username`, etc.).
+ */
 import { apiClient } from './http'
 import { buildPageResult } from './api-page'
 import {
@@ -24,6 +27,7 @@ function isUserLike(value: Record<string, unknown>): boolean {
 }
 
 function normalizeUser(raw: Record<string, unknown>): User {
+  // Backend may return login under several legacy property names.
   const login = raw.login ?? raw.userName ?? raw.username ?? raw.userLogin
 
   return {

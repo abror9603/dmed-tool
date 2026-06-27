@@ -51,9 +51,12 @@ apiClient.interceptors.response.use(
     const isLoginRequest = error.config?.url?.includes('/sdg/uz/login')
     const isSessionRequest = error.config?.url?.includes('/__auth/session')
 
+    const isIntakeRequest = error.config?.url?.includes('/medical-events/intake')
+    const isValidateKeyRequest = error.config?.url?.includes('/validate-key')
+
     const unauthorized = error.response?.status === 401 || error.response?.status === 403
 
-    if (unauthorized && !isLoginRequest && !isSessionRequest) {
+    if (unauthorized && !isLoginRequest && !isSessionRequest && !isIntakeRequest && !isValidateKeyRequest) {
       let sessionValid = false
       try {
         const { data } = await apiClient.get<{ authenticated?: boolean }>('/__auth/session')

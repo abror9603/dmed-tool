@@ -146,6 +146,8 @@ export default {
     subtitle: 'DMED Tool boshqaruv tizimiga kirish uchun login va parolingizni kiriting.',
     loginLabel: 'Login',
     passwordLabel: 'Parol',
+    loginPlaceholder: 'Loginni kiriting',
+    passwordPlaceholder: 'Parolni kiriting',
     loginRequired: 'Login kiritilishi shart',
     passwordRequired: 'Parol kiritilishi shart',
     showPassword: 'Parolni ko\'rsatish',

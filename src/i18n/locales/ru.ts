@@ -139,6 +139,8 @@ export default {
     subtitle: 'Введите логин и пароль для входа в систему DMED Tool.',
     loginLabel: 'Логин',
     passwordLabel: 'Пароль',
+    loginPlaceholder: 'Введите логин',
+    passwordPlaceholder: 'Введите пароль',
     loginRequired: 'Необходимо указать логин',
     passwordRequired: 'Необходимо указать пароль',
     showPassword: 'Показать пароль',

@@ -1,30 +1,23 @@
-/**
- * CTA tugmasi konfiguratsiyasi va dizayni
- */
+/** Call-to-action button configuration for landing sections. */
 export interface CtaButton {
-  label: string;                  // Tugma yozuvi (masalan, "Demo So'rash")
-  href: string;                   // Havola (url yoki #ID)
-  variant: 'primary' | 'secondary' | 'ghost'; // Tugma ko'rinishi turi
+  label: string
+  href: string
+  variant: 'primary' | 'secondary' | 'ghost'
 }
 
-/**
- * Hero bo'limi kontenti
- */
+/** Hero section content model. */
 export interface HeroContent {
-  headline: string;               // Asosiy urg'u berilgan sarlavha
-  subheadline: string;            // Sarlavha ostidagi tushuntirish
-  primaryCta: CtaButton;          // Asosiy harakat tugmasi
-  secondaryCta: CtaButton;        // Ikkinchi darajali tugma
+  headline: string
+  subheadline: string
+  primaryCta: CtaButton
+  secondaryCta: CtaButton
 }
 
-/**
- * Tizim ishlash jarayonining har bir qadami (Workflow)
- */
+/** A single step in the product workflow diagram. */
 export interface WorkflowStep {
-  stepNumber: number;             // Bosqich raqami (1-4)
-  icon: string;                   // Lucide ikonkasi nomi
-  title: string;                  // Bosqich nomi
-  description: string;            // Batafsil tushuntirish
-  highlightColor: string;         // Uslub uchun rang klassi (masalan, text-brand-accent)
+  stepNumber: number
+  icon: string
+  title: string
+  description: string
+  highlightColor: string
 }
-

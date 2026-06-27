@@ -1,3 +1,8 @@
+/**
+ * Global secret-key modal — shown once after application approval.
+ *
+ * Module-level state ensures a single modal instance across the admin shell.
+ */
 import { reactive, readonly } from 'vue'
 
 export interface SecretKeyDialogOptions {

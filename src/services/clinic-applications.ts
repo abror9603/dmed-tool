@@ -1,3 +1,9 @@
+/**
+ * Clinic applications API — public apply flow and admin approve/reject actions.
+ *
+ * Approval may return a one-time `secretKey` in the response envelope; lab applications
+ * skip automatic clinic creation on approve.
+ */
 import { apiClient } from './http'
 import { clinicsService } from './clinics'
 import type { ClinicPayload } from '../types/clinic.types'
@@ -188,6 +194,7 @@ export const clinicApplicationsService = {
     try {
       await clinicsService.create(applicationToClinicPayload(application))
     } catch (err) {
+      // Clinic may already exist after a partial approve — keep the secret key result.
       if (isAxiosError(err)) {
         const status = err.response?.status
         if (status === 403 || status === 409 || status === 400) {

@@ -1,4 +1,7 @@
 <script setup lang="ts">
+/**
+ * Root shell — provides theme toggle via `provide` for public pages and login.
+ */
 import { onMounted, provide, ref } from 'vue'
 import { RouterView } from 'vue-router'
 import { STORAGE_KEYS } from './config/app'

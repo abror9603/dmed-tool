@@ -10,6 +10,7 @@ const props = defineProps<{
 }>();
 
 const iconComponent = computed(() => {
+  // Locale workflow steps store Lucide icon names as strings for i18n portability.
   switch (props.step.icon) {
     case 'Hospital':
       return Hospital;

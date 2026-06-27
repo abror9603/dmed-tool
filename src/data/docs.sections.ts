@@ -1,3 +1,6 @@
+/**
+ * API docs structure — endpoint metadata keyed for i18n; curl examples include ngrok header.
+ */
 import type { ComposerTranslation } from 'vue-i18n'
 import type { DocSection } from '../types/docs.types'
 

@@ -1,3 +1,6 @@
+/**
+ * Docs page content — builds API reference sections from i18n keys and the configured base URL.
+ */
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { createDocsSections, docsIntroKeys } from '../data/docs.sections'

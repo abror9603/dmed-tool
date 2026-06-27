@@ -1,3 +1,6 @@
+/**
+ * One-off asset script — removes near-white pixels from the brand logo PNG for dark UI surfaces.
+ */
 import sharp from 'sharp'
 import { copyFileSync, existsSync, renameSync, unlinkSync } from 'node:fs'
 

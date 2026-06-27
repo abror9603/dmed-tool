@@ -10,18 +10,19 @@ import {
   Edit2,
   RefreshCw,
   ShieldAlert,
-  Copy,
-  Check,
 } from 'lucide-vue-next'
 import AdminAlerts from '../../components/admin/AdminAlerts.vue'
 import AdminRefreshButton from '../../components/admin/AdminRefreshButton.vue'
 import AdminPagination from '../../components/admin/AdminPagination.vue'
+import MaskedSecretKeyButton from '../../components/ui/MaskedSecretKeyButton.vue'
 import { useClinicsStore } from '../../stores/clinics'
-import { clinicsService, type Clinic } from '../../services/clinics'
+import { clinicsService } from '../../services/clinics'
+import type { Clinic } from '../../types/clinic.types'
 import { useAdminLabels } from '../../composables/useAdminLabels'
 import { useConfirmDialog } from '../../composables/useConfirmDialog'
 import { getErrorMessage } from '../../utils/errors'
 import { DEFAULT_PAGE_SIZE, rowNumber } from '../../utils/pagination'
+import { copySecretKey } from '../../utils/secret-key'
 
 const { t } = useI18n()
 const { statusLabel } = useAdminLabels()
@@ -68,11 +69,12 @@ const statusTabs = computed(() => [
 ])
 
 function copyKeyToClipboard(text: string, id: string): void {
-  navigator.clipboard.writeText(text)
-  copiedKey.value = id
-  setTimeout(() => {
-    copiedKey.value = null
-  }, 2000)
+  void copySecretKey(text).then(() => {
+    copiedKey.value = id
+    setTimeout(() => {
+      copiedKey.value = null
+    }, 2000)
+  })
 }
 
 function fillEditForm(clinic: Clinic): void {
@@ -386,19 +388,13 @@ onMounted(() => {
                 </button>
               </td>
               <td class="px-3 py-2">
-                <div v-if="clinic.secretKey" class="flex min-w-0 items-center gap-1">
-                  <code class="min-w-0 flex-1 truncate rounded border border-slate-700 bg-slate-900 px-2 py-0.5 font-mono text-[11px] text-cyan-400">
-                    {{ clinic.secretKey }}
-                  </code>
-                  <button
-                    type="button"
-                    class="shrink-0 rounded p-1 text-slate-500 hover:bg-slate-800 hover:text-slate-300"
+                <div v-if="clinic.secretKey">
+                  <MaskedSecretKeyButton
+                    :secret-key="clinic.secretKey"
+                    :copied="copiedKey === clinic.id.toString()"
                     :title="t('clinics.copyKey')"
-                    @click="copyKeyToClipboard(clinic.secretKey, clinic.id.toString())"
-                  >
-                    <Check v-if="copiedKey === clinic.id.toString()" class="h-3.5 w-3.5 text-emerald-400" />
-                    <Copy v-else class="h-3.5 w-3.5" />
-                  </button>
+                    @copy="copyKeyToClipboard(clinic.secretKey, clinic.id.toString())"
+                  />
                 </div>
                 <div v-else class="text-[11px] italic text-slate-500">{{ t('clinics.keyCreatedOnActivate') }}</div>
               </td>

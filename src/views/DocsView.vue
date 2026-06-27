@@ -6,6 +6,7 @@ import { ArrowLeft, Settings } from 'lucide-vue-next'
 import DocsContent from '../components/docs/DocsContent.vue'
 import DocsSidebar from '../components/docs/DocsSidebar.vue'
 import LanguageSwitcher from '../components/layout/LanguageSwitcher.vue'
+import AppBrand from '../components/layout/AppBrand.vue'
 import { useDocsContent } from '../composables/useDocsContent'
 import { docsSectionIds, type DocsSectionId } from '../data/docs.sections'
 import { DEFAULT_API_URL, STORAGE_KEYS } from '../config/app'
@@ -55,13 +56,18 @@ function resetApiUrl(): void {
 <template>
   <div class="min-h-screen bg-white text-slate-900">
     <header class="sticky top-0 z-30 flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 sm:px-6">
-      <RouterLink
-        to="/"
-        class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 transition-colors hover:text-brand-primary"
-      >
-        <ArrowLeft class="h-4 w-4" />
-        <span>{{ t('common.backHome') }}</span>
-      </RouterLink>
+      <div class="flex min-w-0 items-center gap-4">
+        <RouterLink to="/" class="shrink-0">
+          <AppBrand size="sm" />
+        </RouterLink>
+        <RouterLink
+          to="/"
+          class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 transition-colors hover:text-brand-primary"
+        >
+          <ArrowLeft class="h-4 w-4" />
+          <span>{{ t('common.backHome') }}</span>
+        </RouterLink>
+      </div>
 
       <div class="flex items-center gap-2">
         <LanguageSwitcher />

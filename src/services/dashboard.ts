@@ -5,27 +5,8 @@
  * Runtime guards here keep the UI decoupled from response-shape drift.
  */
 import { apiClient } from './http'
+import { isRecord, parseApiError } from './api-envelope'
 import type { DashboardStats } from '../types/dashboard.types'
-
-interface ApiEnvelope<T> {
-  success?: boolean
-  message?: string
-  object?: T
-  data?: T
-}
-
-/** Backend convention: `{ success: false, message }` instead of HTTP 4xx for some errors. */
-function parseApiError(data: unknown): void {
-  if (!data || typeof data !== 'object') return
-  const root = data as ApiEnvelope<unknown>
-  if (root.success === false) {
-    throw new Error(root.message || 'Request failed')
-  }
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === 'object' && !Array.isArray(value)
-}
 
 /** Minimum shape required before the dashboard view can render safely. */
 function isDashboardStats(value: unknown): value is DashboardStats {

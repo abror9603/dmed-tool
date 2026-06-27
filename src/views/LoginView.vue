@@ -2,8 +2,9 @@
 import { inject, type Ref } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { ArrowLeft, Hospital, Moon, Sun } from 'lucide-vue-next'
+import { ArrowLeft, Moon, Sun } from 'lucide-vue-next'
 import LoginForm from '../components/auth/LoginForm.vue'
+import AppBrand from '../components/layout/AppBrand.vue'
 import LanguageSwitcher from '../components/layout/LanguageSwitcher.vue'
 import { ROUTE_NAMES } from '../router'
 import { useAuthStore } from '../stores/auth'
@@ -60,8 +61,8 @@ async function handleLogin(credentials: LoginCredentials): Promise<void> {
 
       <div class="rounded-3xl border border-slate-200 bg-white/90 p-8 shadow-xl backdrop-blur dark:border-slate-800 dark:bg-brand-dark-card/90">
         <div class="mb-8 text-center">
-          <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-primary/10 text-brand-primary">
-            <Hospital class="h-7 w-7" />
+          <div class="mx-auto mb-4 flex justify-center">
+            <AppBrand size="lg" />
           </div>
           <h1 class="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
             {{ t('loginPage.title') }}

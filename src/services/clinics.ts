@@ -1,54 +1,17 @@
 import { apiClient } from './http'
 import { buildPageResult, type PaginatedResult } from './api-page'
+import {
+  extractRecordArray,
+  parseActionResponse,
+  parseApiError,
+  unwrapEnvelopeObject,
+} from './api-envelope'
 import { DEFAULT_PAGE_SIZE } from '../utils/pagination'
+import type { Clinic, ClinicPayload, ClinicsQuery } from '../types/clinic.types'
 
-export { apiClient, getApiUrl, getResolvedApiUrl } from './http'
-
-export interface ClinicsQuery {
-  page?: number
-  size?: number
-}
+export type { Clinic, ClinicPayload, ClinicsQuery } from '../types/clinic.types'
 
 export type ClinicsPage = PaginatedResult<Clinic>
-
-export interface ClinicPayload {
-  name: string
-  address: string
-  phone: string
-  email: string
-  contact?: string
-  contactInfo?: string
-}
-
-export interface Clinic {
-  id: number | string
-  name: string
-  address: string
-  phone?: string
-  contactInfo?: string
-  contact?: string
-  email: string
-  status: 'ACTIVE' | 'INACTIVE'
-  secretKey: string | null
-}
-
-interface ApiEnvelope<T> {
-  success?: boolean
-  message?: string
-  object?: T
-}
-
-function parseApiError(data: unknown): void {
-  if (!data || typeof data !== 'object') return
-  const root = data as ApiEnvelope<unknown>
-  if (root.success === false) {
-    throw new Error(root.message || 'Request failed')
-  }
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === 'object'
-}
 
 function isClinicLike(value: Record<string, unknown>): boolean {
   return 'id' in value && ('name' in value || 'clinicName' in value)
@@ -75,72 +38,20 @@ function normalizeClinic(raw: Record<string, unknown>): Clinic {
   }
 }
 
-function extractClinicArray(data: unknown): Record<string, unknown>[] {
-  if (Array.isArray(data)) {
-    return data.filter(isRecord)
-  }
-
-  parseApiError(data)
-
-  if (!isRecord(data)) {
-    return []
-  }
-
-  const root = data as ApiEnvelope<unknown>
-  const object = root.object
-
-  if (Array.isArray(object)) {
-    return object.filter(isRecord)
-  }
-
-  if (isRecord(object)) {
-    for (const key of ['content', 'items', 'data', 'clinics'] as const) {
-      const value = object[key]
-      if (Array.isArray(value)) {
-        return value.filter(isRecord)
-      }
-    }
-  }
-
-  return []
-}
-
 function parseClinicList(data: unknown): Clinic[] {
-  return extractClinicArray(data)
+  return extractRecordArray(data)
     .filter(isClinicLike)
     .map(normalizeClinic)
 }
 
 function parseClinicItem(data: unknown): Clinic {
-  if (isRecord(data) && isClinicLike(data)) {
-    return normalizeClinic(data)
+  const direct = unwrapEnvelopeObject(data)
+  if (direct && isClinicLike(direct)) {
+    return normalizeClinic(direct)
   }
 
   parseApiError(data)
-
-  if (isRecord(data)) {
-    const root = data as ApiEnvelope<unknown>
-    if (isRecord(root.object) && isClinicLike(root.object)) {
-      return normalizeClinic(root.object)
-    }
-  }
-
   throw new Error('Invalid clinic response')
-}
-
-function parseActionResponse(data: unknown): void {
-  if (data == null) return
-
-  if (typeof data === 'object' && Object.keys(data as object).length === 0) {
-    return
-  }
-
-  parseApiError(data)
-
-  if (data && typeof data === 'object') {
-    const root = data as ApiEnvelope<unknown>
-    if (root.success === true) return
-  }
 }
 
 function parseClinicsPage(data: unknown, page: number, size: number): ClinicsPage {

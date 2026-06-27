@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ClipboardList, Check, X, Phone, User, Calendar, Key } from 'lucide-vue-next'
 import AdminAlerts from '../../components/admin/AdminAlerts.vue'
 import AdminRefreshButton from '../../components/admin/AdminRefreshButton.vue'
 import AdminPagination from '../../components/admin/AdminPagination.vue'
+import MaskedSecretKeyButton from '../../components/ui/MaskedSecretKeyButton.vue'
 import { useAdminLabels } from '../../composables/useAdminLabels'
 import { useConfirmDialog } from '../../composables/useConfirmDialog'
+import { useSecretKeyDialog } from '../../composables/useSecretKeyDialog'
 import { useClinicApplicationsStore } from '../../stores/clinic-applications'
 import {
   formatApplicationDate,
@@ -16,11 +18,15 @@ import {
   type ApplicationStatus,
 } from '../../services/clinic-applications'
 import { DEFAULT_PAGE_SIZE, rowNumber } from '../../utils/pagination'
+import { copySecretKey } from '../../utils/secret-key'
 
 const { t } = useI18n()
 const { statusLabel, applicationTypeLabel } = useAdminLabels()
 const { confirm } = useConfirmDialog()
+const { showSecretKey } = useSecretKeyDialog()
 const store = useClinicApplicationsStore()
+
+const copiedAppKeyId = ref<string | null>(null)
 
 const applications = computed(() => store.applications)
 const total = computed(() => store.total)
@@ -60,7 +66,24 @@ async function approve(id: string | number): Promise<void> {
     variant: 'success',
   })
   if (!ok) return
-  await store.approveApplication(id)
+
+  try {
+    const result = await store.approveApplication(id)
+    if (result.secretKey) {
+      await showSecretKey({
+        title: t('applications.secretKeyModalTitle'),
+        message: isLab
+          ? t('applications.secretKeyModalMessageLab')
+          : t('applications.secretKeyModalMessage'),
+        secretKey: result.secretKey,
+        expiresAt: result.secretKeyExpiresAt
+          ? formatApplicationDate(result.secretKeyExpiresAt)
+          : undefined,
+      })
+    }
+  } catch {
+    // handled in store
+  }
 }
 
 async function reject(id: string | number): Promise<void> {
@@ -72,6 +95,15 @@ async function reject(id: string | number): Promise<void> {
   })
   if (!ok) return
   await store.rejectApplication(id)
+}
+
+function copyApplicationKey(secretKey: string, id: string | number): void {
+  void copySecretKey(secretKey).then(() => {
+    copiedAppKeyId.value = String(id)
+    setTimeout(() => {
+      copiedAppKeyId.value = null
+    }, 2000)
+  })
 }
 
 function statusClass(status: ApplicationStatus): string {
@@ -227,9 +259,17 @@ onMounted(() => {
                     <X class="h-4 w-4" />
                   </button>
                 </div>
-                <div v-else-if="app.secretKey" class="flex items-center justify-end gap-1 text-[11px] text-slate-500">
-                  <Key class="h-3.5 w-3.5 shrink-0" />
-                  <code class="max-w-full truncate">{{ app.secretKey }}</code>
+                <div v-else-if="app.secretKey">
+                  <MaskedSecretKeyButton
+                    :secret-key="app.secretKey"
+                    :copied="copiedAppKeyId === String(app.id)"
+                    :title="t('clinics.copyKey')"
+                    @copy="copyApplicationKey(app.secretKey, app.id)"
+                  >
+                    <template #leading>
+                      <Key class="mr-1 h-3.5 w-3.5 shrink-0 text-slate-500" />
+                    </template>
+                  </MaskedSecretKeyButton>
                 </div>
                 <span v-else class="text-slate-600">—</span>
               </td>

@@ -1,92 +1,51 @@
 import { apiClient } from './http'
 import { buildPageResult } from './api-page'
+import {
+  extractRecordArray,
+  parseActionResponse,
+  parseApiError,
+  unwrapEnvelopeObject,
+} from './api-envelope'
 import { DEFAULT_PAGE_SIZE } from '../utils/pagination'
+import type { User, UserPayload, UsersPage, UsersQuery } from '../types/user.types'
 
-export type AccountType = 'ADMIN' | 'DOCTOR' | 'OPERATOR'
+export type { AccountType, User, UserPayload, UsersPage, UsersQuery } from '../types/user.types'
 
-export interface UserPayload {
-  login: string
-  password?: string
-  firstName?: string
-  lastName?: string
-  email?: string
-  accountType?: string
-  phoneNumber?: string
-  genderType?: string
+const USER_LIST_KEYS = ['content', 'items', 'data', 'users', 'userList'] as const
+
+function isUserLike(value: Record<string, unknown>): boolean {
+  if (!('id' in value)) return false
+  return (
+    'login' in value ||
+    'userName' in value ||
+    'username' in value ||
+    'userLogin' in value
+  )
 }
 
-export interface User {
-  id: number | string
-  login: string
-  firstName?: string
-  lastName?: string
-  email?: string
-  accountType?: string
-  genderType?: string
-  phoneNumber?: string
-}
+function normalizeUser(raw: Record<string, unknown>): User {
+  const login = raw.login ?? raw.userName ?? raw.username ?? raw.userLogin
 
-export interface UsersQuery {
-  accountType?: AccountType
-  firstName?: string
-  lastName?: string
-  genderType?: string
-  phoneNumber?: string
-  page?: number
-  size?: number
-}
-
-export interface UsersPage {
-  users: User[]
-  total: number
-  page: number
-  size: number
-}
-
-interface ApiEnvelope<T> {
-  success?: boolean
-  message?: string
-  object?: T
-}
-
-function parseApiError(data: unknown): void {
-  if (!data || typeof data !== 'object') return
-  const root = data as ApiEnvelope<unknown>
-  if (root.success === false) {
-    throw new Error(root.message || 'Request failed')
+  return {
+    id: raw.id as number | string,
+    login: login ? String(login) : '',
+    firstName: raw.firstName ? String(raw.firstName) : undefined,
+    lastName: raw.lastName ? String(raw.lastName) : undefined,
+    email: raw.email ? String(raw.email) : undefined,
+    accountType: raw.accountType ? String(raw.accountType) : undefined,
+    phoneNumber: raw.phoneNumber
+      ? String(raw.phoneNumber)
+      : raw.phone
+        ? String(raw.phone)
+        : undefined,
   }
 }
 
 function parseUsersList(data: unknown): User[] {
-  if (Array.isArray(data)) {
-    return data as User[]
-  }
-
-  parseApiError(data)
-
-  if (!data || typeof data !== 'object') {
-    return []
-  }
-
-  const root = data as ApiEnvelope<unknown>
-  if (Array.isArray(root.object)) {
-    return root.object as User[]
-  }
-
-  if (root.object && typeof root.object === 'object') {
-    const page = root.object as Record<string, unknown>
-    if (Array.isArray(page.content)) {
-      return page.content as User[]
-    }
-    if (Array.isArray(page.items)) {
-      return page.items as User[]
-    }
-    if (Array.isArray(page.data)) {
-      return page.data as User[]
-    }
-  }
-
-  return []
+  return extractRecordArray(data, USER_LIST_KEYS)
+    .filter(isUserLike)
+    .map(normalizeUser)
+    .filter((user) => user.login.length > 0)
 }
 
 function parseUsersPage(data: unknown, page: number, size: number): UsersPage {
@@ -108,42 +67,19 @@ function buildUsersParams(query: UsersQuery = {}): Record<string, string | numbe
   if (query.accountType) params.accountType = query.accountType
   if (query.firstName?.trim()) params.firstName = query.firstName.trim()
   if (query.lastName?.trim()) params.lastName = query.lastName.trim()
-  if (query.genderType?.trim()) params.genderType = query.genderType.trim()
   if (query.phoneNumber?.trim()) params.phoneNumber = query.phoneNumber.trim()
 
   return params
 }
 
 function parseUserItem(data: unknown): User {
-  if (data && typeof data === 'object' && 'id' in data && 'login' in data) {
-    return data as User
+  const direct = unwrapEnvelopeObject(data)
+  if (direct && isUserLike(direct)) {
+    return normalizeUser(direct)
   }
 
   parseApiError(data)
-
-  if (data && typeof data === 'object') {
-    const root = data as ApiEnvelope<User>
-    if (root.object && typeof root.object === 'object' && 'id' in root.object) {
-      return root.object
-    }
-  }
-
   throw new Error('Invalid user response')
-}
-
-function parseActionResponse(data: unknown): void {
-  if (data == null) return
-
-  if (typeof data === 'object' && Object.keys(data as object).length === 0) {
-    return
-  }
-
-  parseApiError(data)
-
-  if (data && typeof data === 'object') {
-    const root = data as ApiEnvelope<unknown>
-    if (root.success === true) return
-  }
 }
 
 export const usersService = {

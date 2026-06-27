@@ -357,6 +357,16 @@ export default {
     reject: 'Reject',
     confirmApprove: 'Approve this application? A clinic and user will be created.',
     confirmReject: 'Reject this application?',
+    secretKeyModalTitle: 'Integration key created',
+    secretKeyModalMessage:
+      'The application was approved. Copy the secret key to a safe place — it is shown only once.',
+    secretKeyModalMessageLab:
+      'The lab application was approved. Copy the integration key to a safe place.',
+    secretKeyModalKeyLabel: 'Secret key',
+    secretKeyModalCopy: 'Copy',
+    secretKeyModalCopied: 'Copied',
+    secretKeyModalClose: 'Close',
+    secretKeyModalExpires: 'Valid until: {date}',
   },
   users: {
     listTitle: 'System users',
@@ -375,7 +385,6 @@ export default {
     passwordRequired: 'Password is required',
     confirmDelete: 'Are you sure you want to delete this user?',
     filterAll: 'All',
-    genderType: 'Gender',
     phoneNumber: 'Phone',
     search: 'Search',
     prevPage: 'Previous',

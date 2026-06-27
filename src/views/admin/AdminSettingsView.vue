@@ -2,41 +2,31 @@
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Settings } from 'lucide-vue-next'
-import { i18n } from '../../i18n'
+import AdminAlerts from '../../components/admin/AdminAlerts.vue'
 import { DEFAULT_API_URL, STORAGE_KEYS } from '../../config/app'
-import { useClinicsStore } from '../../stores/clinics'
 
 const { t } = useI18n()
-const clinicsStore = useClinicsStore()
 
 const defaultApiUrl = DEFAULT_API_URL
 const apiUrl = ref(localStorage.getItem(STORAGE_KEYS.API_URL) || defaultApiUrl)
-const saved = ref(false)
+const successMessage = ref<string | null>(null)
 
 function updateApiUrl(): void {
   localStorage.setItem(STORAGE_KEYS.API_URL, apiUrl.value)
-  clinicsStore.clearMessages()
-  clinicsStore.successMessage = i18n.global.t('clinics.apiUrlUpdated')
-  saved.value = true
-  setTimeout(() => {
-    saved.value = false
-  }, 2500)
+  successMessage.value = t('clinics.apiUrlUpdated')
 }
 
 function resetApiUrl(): void {
   localStorage.removeItem(STORAGE_KEYS.API_URL)
   apiUrl.value = defaultApiUrl
-  saved.value = true
-  clinicsStore.clearMessages()
-  clinicsStore.successMessage = i18n.global.t('clinics.apiUrlReset')
-  setTimeout(() => {
-    saved.value = false
-  }, 2500)
+  successMessage.value = t('clinics.apiUrlReset')
 }
 </script>
 
 <template>
   <div class="mx-auto min-w-0 max-w-2xl space-y-6">
+    <AdminAlerts :success="successMessage" />
+
     <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-brand-dark-card">
       <div class="mb-5 flex items-center gap-2">
         <Settings class="h-5 w-5 text-brand-primary" />
@@ -76,13 +66,6 @@ function resetApiUrl(): void {
             {{ t('common.reset') }}
           </button>
         </div>
-
-        <p
-          v-if="saved"
-          class="text-xs font-semibold text-emerald-600 dark:text-emerald-400"
-        >
-          {{ t('clinics.apiUrlUpdated') }}
-        </p>
       </div>
     </section>
   </div>

@@ -416,6 +416,16 @@ export default {
     confirmApprove: 'Ushbu arizani tasdiqlaysizmi? Klinika va foydalanuvchi yaratiladi.',
     confirmApproveLab: 'Ushbu laboratoriya arizasini tasdiqlaysizmi? Laboratoriya, secret key va operator yaratiladi.',
     confirmReject: 'Ushbu arizani rad etasizmi?',
+    secretKeyModalTitle: 'Integratsiya kaliti yaratildi',
+    secretKeyModalMessage:
+      'Ariza tasdiqlandi. Secret keyni xavfsiz joyga nusxalab oling — u faqat bir marta ko\'rsatiladi.',
+    secretKeyModalMessageLab:
+      'Laboratoriya arizasi tasdiqlandi. Integratsiya kalitini xavfsiz joyga nusxalab oling.',
+    secretKeyModalKeyLabel: 'Secret key',
+    secretKeyModalCopy: 'Nusxalash',
+    secretKeyModalCopied: 'Nusxalandi',
+    secretKeyModalClose: 'Yopish',
+    secretKeyModalExpires: 'Amal qilish muddati: {date}',
   },
   users: {
     listTitle: 'Tizim foydalanuvchilari',
@@ -434,7 +444,6 @@ export default {
     passwordRequired: 'Parol kiritilishi shart',
     confirmDelete: 'Haqiqatan ham ushbu foydalanuvchini o\'chirasizmi?',
     filterAll: 'Barchasi',
-    genderType: 'Jinsi',
     phoneNumber: 'Telefon',
     search: 'Qidirish',
     prevPage: 'Oldingi',

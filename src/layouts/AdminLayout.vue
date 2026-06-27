@@ -14,6 +14,8 @@ import {
 } from 'lucide-vue-next'
 import { useAdminLocale } from '../composables/useAdminLocale'
 import AdminConfirmDialog from '../components/admin/AdminConfirmDialog.vue'
+import AdminSecretKeyModal from '../components/admin/AdminSecretKeyModal.vue'
+import AppBrand from '../components/layout/AppBrand.vue'
 import { ROUTE_NAMES } from '../router'
 import { useAuthStore } from '../stores/auth'
 
@@ -89,11 +91,8 @@ function isActive(name: string): boolean {
       :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
     >
       <div class="flex h-16 items-center justify-between border-b border-slate-800 px-5">
-        <RouterLink to="/" class="block" @click="closeSidebarOnMobile">
-          <p class="text-lg font-black tracking-tight text-white">{{ t('common.brand') }}</p>
-          <p class="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500">
-            {{ t('admin.panelSubtitle') }}
-          </p>
+        <RouterLink to="/" class="block min-w-0 flex-1" @click="closeSidebarOnMobile">
+          <AppBrand size="sm" on-dark :subtitle="t('admin.panelSubtitle')" />
         </RouterLink>
         <button
           type="button"
@@ -179,5 +178,6 @@ function isActive(name: string): boolean {
     </div>
 
     <AdminConfirmDialog />
+    <AdminSecretKeyModal />
   </div>
 </template>

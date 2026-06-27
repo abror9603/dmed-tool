@@ -357,6 +357,16 @@ export default {
     reject: 'Отклонить',
     confirmApprove: 'Одобрить эту заявку? Будут созданы клиника и пользователь.',
     confirmReject: 'Отклонить эту заявку?',
+    secretKeyModalTitle: 'Ключ интеграции создан',
+    secretKeyModalMessage:
+      'Заявка одобрена. Скопируйте secret key в безопасное место — он показывается только один раз.',
+    secretKeyModalMessageLab:
+      'Заявка лаборатории одобрена. Скопируйте ключ интеграции в безопасное место.',
+    secretKeyModalKeyLabel: 'Secret key',
+    secretKeyModalCopy: 'Копировать',
+    secretKeyModalCopied: 'Скопировано',
+    secretKeyModalClose: 'Закрыть',
+    secretKeyModalExpires: 'Действителен до: {date}',
   },
   users: {
     listTitle: 'Пользователи системы',
@@ -375,7 +385,6 @@ export default {
     passwordRequired: 'Необходимо указать пароль',
     confirmDelete: 'Вы действительно хотите удалить этого пользователя?',
     filterAll: 'Все',
-    genderType: 'Пол',
     phoneNumber: 'Телефон',
     search: 'Поиск',
     prevPage: 'Назад',

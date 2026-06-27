@@ -7,6 +7,7 @@ import {
   type ApplicationStatus,
   type ApplicationApplyPayload,
   type ApplicationsQuery,
+  type ApproveApplicationResult,
 } from '../services/clinic-applications'
 import { useClinicsStore } from './clinics'
 import { DEFAULT_PAGE_SIZE } from '../utils/pagination'
@@ -78,7 +79,7 @@ export const useClinicApplicationsStore = defineStore('clinicApplications', () =
     }
   }
 
-  async function approveApplication(id: number | string): Promise<void> {
+  async function approveApplication(id: number | string): Promise<ApproveApplicationResult> {
     loading.value = true
     error.value = null
     try {
@@ -86,7 +87,7 @@ export const useClinicApplicationsStore = defineStore('clinicApplications', () =
       if (!application) {
         throw new Error(i18n.global.t('errors.applicationNotFound'))
       }
-      await clinicApplicationsService.approveApplication(id, application)
+      const result = await clinicApplicationsService.approveApplication(id, application)
       successMessage.value = isLabApplication(application)
         ? i18n.global.t('errors.applicationApprovedLab')
         : i18n.global.t('errors.applicationApproved')
@@ -94,6 +95,7 @@ export const useClinicApplicationsStore = defineStore('clinicApplications', () =
       if (!isLabApplication(application)) {
         await useClinicsStore().fetchAllClinics()
       }
+      return result
     } catch (err) {
       error.value = getErrorMessage(err, i18n.global.t('errors.applicationApprove'))
       throw err

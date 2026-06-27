@@ -4,6 +4,7 @@ import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { Sun, Moon, BookOpen, LayoutDashboard } from 'lucide-vue-next'
 import LanguageSwitcher from './LanguageSwitcher.vue'
+import AppBrand from './AppBrand.vue'
 import { ROUTE_NAMES } from '../../router'
 import { useAuthStore } from '../../stores/auth'
 
@@ -20,10 +21,8 @@ onMounted(() => {
 <template>
   <header class="sticky top-0 z-50 w-full border-b backdrop-blur-md transition-colors duration-300 border-slate-200 bg-white/80 dark:border-slate-800 dark:bg-brand-dark/80">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-      <RouterLink to="/" class="flex items-center space-x-2">
-        <span class="text-xl font-bold tracking-tight bg-gradient-to-r from-brand-primary to-brand-secondary bg-clip-text text-transparent">
-          {{ t('common.brand') }}
-        </span>
+      <RouterLink to="/" class="flex items-center gap-3">
+        <AppBrand size="md" />
         <span class="px-2 py-0.5 text-xs font-semibold rounded bg-brand-primary/10 text-brand-primary dark:bg-brand-primary/20">
           {{ t('common.mvp') }}
         </span>

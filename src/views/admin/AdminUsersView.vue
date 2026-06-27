@@ -9,7 +9,7 @@ import AppSelect from '../../components/ui/AppSelect.vue'
 import { useUsersStore } from '../../stores/users'
 import { useAdminLabels } from '../../composables/useAdminLabels'
 import { useConfirmDialog } from '../../composables/useConfirmDialog'
-import type { AccountType, User } from '../../services/users'
+import type { AccountType, User } from '../../types/user.types'
 import { DEFAULT_PAGE_SIZE, rowNumber } from '../../utils/pagination'
 
 const { t } = useI18n()
@@ -31,13 +31,11 @@ const formLastName = ref('')
 const formEmail = ref('')
 const formAccountType = ref('' as '' | AccountType)
 const formPhoneNumber = ref('')
-const formGenderType = ref('')
 
 const draftFilters = reactive({
   accountType: '' as '' | AccountType,
   firstName: '',
   lastName: '',
-  genderType: '',
   phoneNumber: '',
 })
 
@@ -59,7 +57,6 @@ function syncDraftFromStore(): void {
   draftFilters.accountType = (store.filters.accountType ?? '') as '' | AccountType
   draftFilters.firstName = store.filters.firstName ?? ''
   draftFilters.lastName = store.filters.lastName ?? ''
-  draftFilters.genderType = store.filters.genderType ?? ''
   draftFilters.phoneNumber = store.filters.phoneNumber ?? ''
 }
 
@@ -72,7 +69,6 @@ function resetEditForm(): void {
   formEmail.value = ''
   formAccountType.value = ''
   formPhoneNumber.value = ''
-  formGenderType.value = ''
 }
 
 function startEdit(user: User): void {
@@ -84,7 +80,6 @@ function startEdit(user: User): void {
   formEmail.value = user.email ?? ''
   formAccountType.value = (user.accountType as AccountType | undefined) ?? ''
   formPhoneNumber.value = user.phoneNumber ?? ''
-  formGenderType.value = user.genderType ?? ''
 }
 
 async function saveUser(): Promise<void> {
@@ -102,7 +97,6 @@ async function saveUser(): Promise<void> {
     email: formEmail.value.trim() || undefined,
     accountType: formAccountType.value || undefined,
     phoneNumber: formPhoneNumber.value.trim() || undefined,
-    genderType: formGenderType.value.trim() || undefined,
     ...(formPassword.value ? { password: formPassword.value } : {}),
   }
 
@@ -125,7 +119,6 @@ async function applyFilters(): Promise<void> {
     accountType: draftFilters.accountType || undefined,
     firstName: draftFilters.firstName || undefined,
     lastName: draftFilters.lastName || undefined,
-    genderType: draftFilters.genderType || undefined,
     phoneNumber: draftFilters.phoneNumber || undefined,
     page: 0,
   })
@@ -136,7 +129,6 @@ async function resetFilters(): Promise<void> {
   draftFilters.accountType = ''
   draftFilters.firstName = ''
   draftFilters.lastName = ''
-  draftFilters.genderType = ''
   draftFilters.phoneNumber = ''
   await store.resetFilters()
 }
@@ -181,7 +173,7 @@ onMounted(() => {
     </p>
 
     <form
-      class="grid grid-cols-1 gap-3 rounded-xl border border-slate-700/70 bg-[#111b2e] p-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6"
+      class="grid grid-cols-1 gap-3 rounded-xl border border-slate-700/70 bg-[#111b2e] p-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5"
       @submit.prevent="applyFilters"
     >
       <label class="space-y-1">
@@ -206,15 +198,6 @@ onMounted(() => {
         <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">{{ t('users.lastName') }}</span>
         <input
           v-model="draftFilters.lastName"
-          type="text"
-          class="w-full rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-xs text-slate-200"
-        />
-      </label>
-
-      <label class="space-y-1">
-        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">{{ t('users.genderType') }}</span>
-        <input
-          v-model="draftFilters.genderType"
           type="text"
           class="w-full rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-xs text-slate-200"
         />
@@ -323,15 +306,6 @@ onMounted(() => {
           />
         </label>
 
-        <label class="space-y-1">
-          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">{{ t('users.genderType') }}</span>
-          <input
-            v-model="formGenderType"
-            type="text"
-            class="w-full rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-xs text-slate-200"
-          />
-        </label>
-
         <div class="flex items-end gap-2 sm:col-span-2 lg:col-span-3">
           <button
             type="submit"
@@ -374,7 +348,6 @@ onMounted(() => {
             <col class="w-[14%]" />
             <col class="w-[18%]" />
             <col class="w-[12%]" />
-            <col class="w-20" />
             <col class="w-[18%]" />
             <col class="w-28" />
             <col class="w-[72px]" />
@@ -385,7 +358,6 @@ onMounted(() => {
               <th class="px-3 py-2 text-left">{{ t('users.login') }}</th>
               <th class="px-3 py-2 text-left">{{ t('users.fullName') }}</th>
               <th class="px-3 py-2 text-left">{{ t('users.phoneNumber') }}</th>
-              <th class="px-3 py-2 text-left">{{ t('users.genderType') }}</th>
               <th class="px-3 py-2 text-left">{{ t('users.email') }}</th>
               <th class="px-3 py-2 text-left">{{ t('users.accountType') }}</th>
               <th class="px-3 py-2 text-right">{{ t('clinics.table.actions') }}</th>
@@ -401,7 +373,6 @@ onMounted(() => {
                 {{ [user.firstName, user.lastName].filter(Boolean).join(' ') || '—' }}
               </td>
               <td class="px-3 py-2 truncate">{{ user.phoneNumber || '—' }}</td>
-              <td class="px-3 py-2">{{ user.genderType || '—' }}</td>
               <td class="px-3 py-2 truncate" :title="user.email || ''">{{ user.email || '—' }}</td>
               <td class="px-3 py-2">
                 <span

@@ -1,9 +1,17 @@
 import { apiClient } from './http'
-import { clinicsService, type ClinicPayload } from './clinics'
+import { clinicsService } from './clinics'
+import type { ClinicPayload } from '../types/clinic.types'
 import type { ApplicationType } from '../types/application.types'
 import type { ClinicType } from '../types/clinic.types'
 import { isAxiosError } from 'axios'
 import { buildPageResult, type PaginatedResult } from './api-page'
+import {
+  extractRecordArray,
+  isRecord,
+  parseActionResponse,
+  parseApiError,
+  unwrapEnvelopeObject,
+} from './api-envelope'
 import { DEFAULT_PAGE_SIZE } from '../utils/pagination'
 
 export type { ClinicType } from '../types/clinic.types'
@@ -64,83 +72,40 @@ export interface ClinicApplication {
 
 export type ApplicationsPage = PaginatedResult<ClinicApplication>
 
-interface ApiEnvelope<T> {
-  success?: boolean
-  message?: string
-  object?: T
+export interface ApproveApplicationResult {
+  secretKey?: string
+  secretKeyExpiresAt?: string
 }
 
-function parseApiError(data: unknown): void {
-  if (!data || typeof data !== 'object') return
-  const root = data as ApiEnvelope<unknown>
-  if (root.success === false) {
-    throw new Error(root.message || 'Request failed')
+function isApplicationLike(value: Record<string, unknown>): boolean {
+  return 'id' in value && 'status' in value
+}
+
+function extractApproveResult(data: unknown): ApproveApplicationResult {
+  const direct = unwrapEnvelopeObject(data) ?? (isRecord(data) ? data : null)
+  if (!direct) return {}
+
+  return {
+    secretKey: typeof direct.secretKey === 'string' ? direct.secretKey : undefined,
+    secretKeyExpiresAt:
+      typeof direct.secretKeyExpiresAt === 'string' ? direct.secretKeyExpiresAt : undefined,
   }
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === 'object' && !Array.isArray(value)
-}
-
-function extractSecretKey(data: unknown): string | undefined {
-  if (!isRecord(data)) return undefined
-  if (typeof data.secretKey === 'string') return data.secretKey
-  const nested = data.object
-  if (isRecord(nested) && typeof nested.secretKey === 'string') {
-    return nested.secretKey
-  }
-  return undefined
 }
 
 function parseApplicationList(data: unknown): ClinicApplication[] {
-  if (Array.isArray(data)) {
-    return data as ClinicApplication[]
-  }
-
-  parseApiError(data)
-
-  if (!data || typeof data !== 'object') {
-    return []
-  }
-
-  const root = data as ApiEnvelope<unknown>
-  if (Array.isArray(root.object)) {
-    return root.object as ClinicApplication[]
-  }
-
-  return []
+  return extractRecordArray(data)
+    .filter(isApplicationLike)
+    .map((row) => row as unknown as ClinicApplication)
 }
 
 function parseApplicationItem(data: unknown): ClinicApplication {
-  if (data && typeof data === 'object' && 'id' in data && 'status' in data) {
-    return data as ClinicApplication
+  const direct = unwrapEnvelopeObject(data)
+  if (direct && isApplicationLike(direct)) {
+    return direct as unknown as ClinicApplication
   }
 
   parseApiError(data)
-
-  if (data && typeof data === 'object') {
-    const root = data as ApiEnvelope<ClinicApplication>
-    if (root.object && typeof root.object === 'object' && 'id' in root.object) {
-      return root.object
-    }
-  }
-
   throw new Error('Invalid application response')
-}
-
-function parseActionResponse(data: unknown): void {
-  if (data == null) return
-
-  if (typeof data === 'object' && Object.keys(data as object).length === 0) {
-    return
-  }
-
-  parseApiError(data)
-
-  if (data && typeof data === 'object') {
-    const root = data as ApiEnvelope<unknown>
-    if (root.success === true) return
-  }
 }
 
 export function isLabApplication(app: ClinicApplication): boolean {
@@ -208,14 +173,17 @@ export const clinicApplicationsService = {
     return parseApplicationItem(data)
   },
 
-  async approve(id: string | number): Promise<string | undefined> {
+  async approve(id: string | number): Promise<ApproveApplicationResult> {
     const { data } = await apiClient.post<unknown>(`/api/v1/clinic-applications/${id}/approve`)
     parseActionResponse(data)
-    return extractSecretKey(data)
+    return extractApproveResult(data)
   },
 
-  async approveWithClinic(id: string | number, application: ClinicApplication): Promise<string | undefined> {
-    const secretKey = await this.approve(id)
+  async approveWithClinic(
+    id: string | number,
+    application: ClinicApplication,
+  ): Promise<ApproveApplicationResult> {
+    const result = await this.approve(id)
 
     try {
       await clinicsService.create(applicationToClinicPayload(application))
@@ -223,16 +191,19 @@ export const clinicApplicationsService = {
       if (isAxiosError(err)) {
         const status = err.response?.status
         if (status === 403 || status === 409 || status === 400) {
-          return secretKey
+          return result
         }
       }
       throw err
     }
 
-    return secretKey
+    return result
   },
 
-  async approveApplication(id: string | number, application: ClinicApplication): Promise<string | undefined> {
+  async approveApplication(
+    id: string | number,
+    application: ClinicApplication,
+  ): Promise<ApproveApplicationResult> {
     if (isLabApplication(application)) {
       return this.approve(id)
     }

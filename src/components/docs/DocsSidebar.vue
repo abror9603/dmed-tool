@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { ChevronDown, ChevronRight, Folder } from 'lucide-vue-next'
+import AppBrand from '../layout/AppBrand.vue'
 import { useDocsContent } from '../../composables/useDocsContent'
 import { docsSectionIds, type DocsSectionId } from '../../data/docs.sections'
 
@@ -31,10 +32,9 @@ function isEndpointActive(endpointId: string): boolean {
 <template>
   <aside class="flex h-full w-full flex-col border-r border-slate-200 bg-[#f7f7f7]">
     <div class="border-b border-slate-200 px-5 py-5">
-      <RouterLink to="/" class="text-lg font-bold uppercase tracking-wide text-slate-800 hover:text-brand-primary">
-        {{ t('docsPage.apiTitle') }}
+      <RouterLink to="/">
+        <AppBrand size="sm" :subtitle="t('docsPage.apiSubtitle')" />
       </RouterLink>
-      <p class="mt-1 text-xs text-slate-500">{{ t('docsPage.apiSubtitle') }}</p>
     </div>
 
     <nav class="flex-1 overflow-y-auto px-3 py-4">

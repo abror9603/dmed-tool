@@ -1,7 +1,8 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { i18n } from '../i18n'
-import { clinicsService, type ClinicPayload, type ClinicsQuery } from '../services/clinics'
+import { clinicsService, type ClinicsQuery } from '../services/clinics'
+import type { ClinicPayload } from '../types/clinic.types'
 import { DEFAULT_PAGE_SIZE } from '../utils/pagination'
 import { getErrorMessage } from '../utils/errors'
 

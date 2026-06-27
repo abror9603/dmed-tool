@@ -1,7 +1,8 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { i18n } from '../i18n'
-import { usersService, type UserPayload, type UsersQuery } from '../services/users'
+import { usersService } from '../services/users'
+import type { UserPayload, UsersQuery } from '../types/user.types'
 import { DEFAULT_PAGE_SIZE } from '../utils/pagination'
 import { getErrorMessage } from '../utils/errors'
 

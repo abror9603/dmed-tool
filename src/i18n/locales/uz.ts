@@ -217,6 +217,8 @@ export default {
       eventsToday: 'Bugun: {count} ta',
       clinics: 'Faol klinikalar',
       clinicsInactive: 'Nofaol: {count}',
+      labs: 'Faol laboratoriyalar',
+      labsInactive: 'Nofaol: {count}',
       sync: 'DMED sinxronizatsiya',
       syncSuccess: 'Muvaffaqiyatli: {count}',
       applications: 'Kutilayotgan arizalar',
@@ -272,6 +274,14 @@ export default {
       admins: 'Administratorlar',
       operators: 'Operatorlar',
       doctors: 'Shifokorlar',
+    },
+    modals: {
+      clinicsTitle: 'Faol klinikalar',
+      labsTitle: 'Faol laboratoriyalar',
+      subtitle: 'Jami, faol va nofaol soni',
+      total: 'Jami',
+      active: 'Faol',
+      inactive: 'Nofaol',
     },
   },
   statuses: {

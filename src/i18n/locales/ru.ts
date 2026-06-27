@@ -192,6 +192,8 @@ export default {
       eventsToday: 'Сегодня: {count}',
       clinics: 'Активные клиники',
       clinicsInactive: 'Неактивные: {count}',
+      labs: 'Активные лаборатории',
+      labsInactive: 'Неактивные: {count}',
       sync: 'DMED sync',
       syncSuccess: 'Успешно: {count}',
       applications: 'Ожидающие заявки',
@@ -235,6 +237,14 @@ export default {
       admins: 'Администраторы',
       operators: 'Операторы',
       doctors: 'Врачи',
+    },
+    modals: {
+      clinicsTitle: 'Активные клиники',
+      labsTitle: 'Активные лаборатории',
+      subtitle: 'Всего, активные и неактивные',
+      total: 'Всего',
+      active: 'Активные',
+      inactive: 'Неактивные',
     },
   },
   docsPage: {

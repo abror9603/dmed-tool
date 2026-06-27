@@ -192,6 +192,8 @@ export default {
       eventsToday: 'Today: {count}',
       clinics: 'Active clinics',
       clinicsInactive: 'Inactive: {count}',
+      labs: 'Active laboratories',
+      labsInactive: 'Inactive: {count}',
       sync: 'DMED sync',
       syncSuccess: 'Successful: {count}',
       applications: 'Pending applications',
@@ -235,6 +237,14 @@ export default {
       admins: 'Administrators',
       operators: 'Operators',
       doctors: 'Doctors',
+    },
+    modals: {
+      clinicsTitle: 'Active clinics',
+      labsTitle: 'Active laboratories',
+      subtitle: 'Total, active, and inactive counts',
+      total: 'Total',
+      active: 'Active',
+      inactive: 'Inactive',
     },
   },
   docsPage: {

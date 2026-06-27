@@ -10,6 +10,7 @@ import {
   Building2,
   CalendarDays,
   ClipboardList,
+  FlaskConical,
   KeyRound,
   RefreshCw,
 } from 'lucide-vue-next'
@@ -26,6 +27,8 @@ export interface DashboardMetricCard {
   sub: string
   accent: string
   badge?: string
+  /** Opens the entity stats modal when the card is clicked. */
+  modalKey?: 'clinics' | 'labs'
 }
 
 export interface DashboardBarItem {
@@ -73,7 +76,7 @@ export function useDashboardMetrics() {
   const metricCards = computed((): DashboardMetricCard[] => {
     if (!stats.value) return []
 
-    return [
+    const cards: DashboardMetricCard[] = [
       {
         key: 'events',
         icon: Activity,
@@ -89,7 +92,23 @@ export function useDashboardMetrics() {
         value: `${stats.value.clinics.active}/${stats.value.clinics.total}`,
         sub: t('dashboardPage.metrics.clinicsInactive', { count: stats.value.clinics.inactive }),
         accent: 'text-blue-400',
+        modalKey: 'clinics',
       },
+    ]
+
+    if (stats.value.labs) {
+      cards.push({
+        key: 'labs',
+        icon: FlaskConical,
+        label: t('dashboardPage.metrics.labs'),
+        value: `${stats.value.labs.active}/${stats.value.labs.total}`,
+        sub: t('dashboardPage.metrics.labsInactive', { count: stats.value.labs.inactive }),
+        accent: 'text-teal-400',
+        modalKey: 'labs',
+      })
+    }
+
+    cards.push(
       {
         key: 'sync',
         icon: RefreshCw,
@@ -124,7 +143,9 @@ export function useDashboardMetrics() {
         accent: 'text-rose-400',
         badge: t('dashboardPage.metrics.keysBadge'),
       },
-    ]
+    )
+
+    return cards
   })
 
   const statusSegments = computed((): DashboardDonutSegment[] => {

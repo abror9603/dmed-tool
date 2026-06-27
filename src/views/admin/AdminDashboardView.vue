@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { AlertTriangle, RefreshCw, X } from 'lucide-vue-next'
 import AdminAlerts from '../../components/admin/AdminAlerts.vue'
 import DashboardBarChart from '../../components/admin/dashboard/DashboardBarChart.vue'
 import DashboardDonutChart from '../../components/admin/dashboard/DashboardDonutChart.vue'
+import DashboardEntityStatsModal from '../../components/admin/dashboard/DashboardEntityStatsModal.vue'
 import DashboardLineChart from '../../components/admin/dashboard/DashboardLineChart.vue'
 import { formatDashboardTime } from '../../composables/useDashboardCharts'
 import { useAdminLabels } from '../../composables/useAdminLabels'
@@ -12,6 +13,8 @@ import { useDashboardMetrics } from '../../composables/useDashboardMetrics'
 
 const { t } = useI18n()
 const { statusLabel, alertTypeLabel } = useAdminLabels()
+
+const entityStatsModal = ref<'clinics' | 'labs' | null>(null)
 
 const {
   store,
@@ -43,6 +46,14 @@ onMounted(async () => {
 onUnmounted(() => {
   store.destroy()
 })
+
+function openEntityModal(key: 'clinics' | 'labs'): void {
+  entityStatsModal.value = key
+}
+
+function closeEntityModal(): void {
+  entityStatsModal.value = null
+}
 </script>
 
 <template>
@@ -123,11 +134,15 @@ onUnmounted(() => {
       <p class="mb-3 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">
         {{ t('dashboardPage.mainMetrics') }}
       </p>
-      <div class="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
-        <div
+      <div class="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7">
+        <component
+          :is="card.modalKey ? 'button' : 'div'"
           v-for="card in metricCards"
           :key="card.key"
-          class="min-w-0 rounded-2xl border border-slate-700/70 bg-[#111b2e] p-4 shadow-lg shadow-black/10"
+          :type="card.modalKey ? 'button' : undefined"
+          class="min-w-0 rounded-2xl border border-slate-700/70 bg-[#111b2e] p-4 text-left shadow-lg shadow-black/10"
+          :class="card.modalKey ? 'cursor-pointer transition-colors hover:border-cyan-500/40 hover:bg-[#152238]' : ''"
+          @click="card.modalKey ? openEntityModal(card.modalKey) : undefined"
         >
           <div class="flex items-start justify-between gap-3">
             <div class="min-w-0 flex-1">
@@ -143,9 +158,17 @@ onUnmounted(() => {
           >
             {{ card.badge }}
           </span>
-        </div>
+        </component>
       </div>
     </section>
+
+    <DashboardEntityStatsModal
+      :open="entityStatsModal !== null"
+      :type="entityStatsModal"
+      :clinics="stats?.clinics"
+      :labs="stats?.labs"
+      @close="closeEntityModal"
+    />
 
     <section v-if="stats">
       <p class="mb-3 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">

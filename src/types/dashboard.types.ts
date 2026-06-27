@@ -45,6 +45,12 @@ export interface LabEventsStats {
   critical: number
 }
 
+export interface LabsStats {
+  total: number
+  active: number
+  inactive: number
+}
+
 export interface DashboardStats {
   generatedAt: string
   medicalEvents: {
@@ -88,5 +94,6 @@ export interface DashboardStats {
     doctors: number
   }
   labEvents?: LabEventsStats
+  labs?: LabsStats
   systemAlerts: SystemAlert[]
 }

@@ -18,10 +18,12 @@ import AdminRefreshButton from '../../components/admin/AdminRefreshButton.vue'
 import { useClinicsStore } from '../../stores/clinics'
 import { clinicsService, type Clinic } from '../../services/clinics'
 import { useAdminLabels } from '../../composables/useAdminLabels'
+import { useConfirmDialog } from '../../composables/useConfirmDialog'
 import { getErrorMessage } from '../../utils/errors'
 
 const { t } = useI18n()
 const { statusLabel } = useAdminLabels()
+const { confirm, alert: showAlert } = useConfirmDialog()
 const clinicsStore = useClinicsStore()
 
 const clinics = computed(() => clinicsStore.clinics)
@@ -94,7 +96,7 @@ async function saveClinic(): Promise<void> {
   if (editId.value === null) return
 
   if (!formName.value || !formAddress.value || !formPhone.value || !formEmail.value) {
-    alert(t('clinics.fillAllFields'))
+    await showAlert(t('clinics.fillAllFields'))
     return
   }
 
@@ -148,7 +150,13 @@ async function toggleStatus(clinic: Clinic): Promise<void> {
 }
 
 async function deleteClinic(id: number | string): Promise<void> {
-  if (!confirm(t('clinics.confirmDelete'))) return
+  const ok = await confirm({
+    title: t('common.delete'),
+    message: t('clinics.confirmDelete'),
+    confirmLabel: t('common.delete'),
+    variant: 'danger',
+  })
+  if (!ok) return
 
   if (editId.value === id) {
     resetForm()

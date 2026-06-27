@@ -5,7 +5,7 @@ import { Hospital, ShieldCheck } from 'lucide-vue-next'
 import ClinicApplicationForm from '../forms/ClinicApplicationForm.vue'
 import {
   clinicApplicationsService,
-  type ClinicApplicationApplyPayload,
+  type ApplicationApplyPayload,
 } from '../../services/clinic-applications'
 import { getErrorMessage } from '../../utils/errors'
 
@@ -16,13 +16,13 @@ const error = ref<string | null>(null)
 const success = ref<string | null>(null)
 const formRef = ref<InstanceType<typeof ClinicApplicationForm> | null>(null)
 
-async function handleSubmit(payload: ClinicApplicationApplyPayload): Promise<void> {
+async function handleSubmit(payload: ApplicationApplyPayload): Promise<void> {
   loading.value = true
   error.value = null
   success.value = null
 
   try {
-    await clinicApplicationsService.applyWithUser(payload)
+    await clinicApplicationsService.apply(payload)
     success.value = t('registration.success')
     formRef.value?.resetForm()
   } catch (err) {

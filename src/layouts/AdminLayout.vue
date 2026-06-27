@@ -12,8 +12,10 @@ import {
   ClipboardList,
   Users,
   Activity,
+  FlaskConical,
 } from 'lucide-vue-next'
 import { useAdminLocale } from '../composables/useAdminLocale'
+import AdminConfirmDialog from '../components/admin/AdminConfirmDialog.vue'
 import { ROUTE_NAMES } from '../router'
 import { useAuthStore } from '../stores/auth'
 
@@ -38,6 +40,12 @@ const manageNav = computed(() => [
     label: t('admin.medicalEvents'),
     icon: Activity,
     to: { name: ROUTE_NAMES.ADMIN_MEDICAL_EVENTS },
+  },
+  {
+    name: ROUTE_NAMES.ADMIN_LAB_INTAKE,
+    label: t('admin.labIntake'),
+    icon: FlaskConical,
+    to: { name: ROUTE_NAMES.ADMIN_LAB_INTAKE },
   },
   {
     name: ROUTE_NAMES.ADMIN_CLINICS,
@@ -214,5 +222,7 @@ function isActive(name: string): boolean {
         <RouterView />
       </main>
     </div>
+
+    <AdminConfirmDialog />
   </div>
 </template>

@@ -12,6 +12,7 @@ const AdminApplicationsView = () => import('../views/admin/AdminApplicationsView
 const AdminClinicsView = () => import('../views/admin/AdminClinicsView.vue')
 const AdminUsersView = () => import('../views/admin/AdminUsersView.vue')
 const AdminMedicalEventsView = () => import('../views/admin/AdminMedicalEventsView.vue')
+const AdminLabIntakeView = () => import('../views/admin/AdminLabIntakeView.vue')
 const AdminSettingsView = () => import('../views/admin/AdminSettingsView.vue')
 
 export const ROUTE_NAMES = {
@@ -24,6 +25,7 @@ export const ROUTE_NAMES = {
   ADMIN_CLINICS: 'admin-clinics',
   ADMIN_USERS: 'admin-users',
   ADMIN_MEDICAL_EVENTS: 'admin-medical-events',
+  ADMIN_LAB_INTAKE: 'admin-lab-intake',
   ADMIN_SETTINGS: 'admin-settings',
   /** @deprecated Use ADMIN_CLINICS */
   CLINICS: 'admin-clinics',
@@ -92,6 +94,11 @@ const router = createRouter({
           path: 'medical-events',
           name: ROUTE_NAMES.ADMIN_MEDICAL_EVENTS,
           component: AdminMedicalEventsView,
+        },
+        {
+          path: 'lab-intake',
+          name: ROUTE_NAMES.ADMIN_LAB_INTAKE,
+          component: AdminLabIntakeView,
         },
         {
           path: 'settings',

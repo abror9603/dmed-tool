@@ -11,15 +11,26 @@ import {
   Send,
   User,
 } from 'lucide-vue-next'
-import type { ClinicApplicationApplyPayload } from '../../services/clinic-applications'
+import type { ApplicationApplyPayload } from '../../services/clinic-applications'
 import { CLINIC_TYPES, type ClinicType } from '../../types/clinic.types'
 
-type ApplicationFormState = Omit<ClinicApplicationApplyPayload, 'clinicType'> & {
-  clinicType: ClinicType | ''
+type OrgType = ClinicType | 'LAB' | ''
+
+const REGISTRATION_TYPES: OrgType[] = [...CLINIC_TYPES, 'LAB']
+
+type ApplicationFormState = {
+  clinicName: string
+  clinicType: OrgType
+  firstName: string
+  lastName: string
+  login: string
+  password: string
+  phoneNumber1: string
+  phoneNumber2: string
 }
 
 const emit = defineEmits<{
-  submit: [payload: ClinicApplicationApplyPayload]
+  submit: [payload: ApplicationApplyPayload]
 }>()
 
 const props = defineProps<{
@@ -53,6 +64,8 @@ const touched = reactive({
   phoneNumber2: false,
 })
 
+const isLab = computed(() => form.clinicType === 'LAB')
+
 const phonePattern = /^\+?[0-9\s()-]{9,20}$/
 
 const fieldErrors = computed(() => ({
@@ -67,23 +80,27 @@ const fieldErrors = computed(() => ({
       ? t('registration.phoneInvalid')
       : '',
   phoneNumber2:
-    touched.phoneNumber2 && !phonePattern.test(form.phoneNumber2.trim())
+    !isLab.value &&
+    touched.phoneNumber2 &&
+    !phonePattern.test(form.phoneNumber2.trim())
       ? t('registration.phoneInvalid')
       : '',
 }))
 
-const isValid = computed(() =>
-  Boolean(
+const isValid = computed(() => {
+  const baseValid =
     form.clinicName.trim() &&
-      form.clinicType &&
-      form.firstName.trim() &&
-      form.lastName.trim() &&
-      form.login.trim() &&
-      form.password &&
-      phonePattern.test(form.phoneNumber1.trim()) &&
-      phonePattern.test(form.phoneNumber2.trim()),
-  ),
-)
+    form.clinicType &&
+    form.firstName.trim() &&
+    form.lastName.trim() &&
+    form.login.trim() &&
+    form.password &&
+    phonePattern.test(form.phoneNumber1.trim())
+
+  if (isLab.value) return Boolean(baseValid)
+
+  return Boolean(baseValid && phonePattern.test(form.phoneNumber2.trim()))
+})
 
 function touchAll(): void {
   Object.keys(touched).forEach((key) => {
@@ -109,14 +126,27 @@ function handleSubmit(): void {
   touchAll()
   if (!isValid.value) return
 
-  emit('submit', {
+  const base = {
     clinicName: form.clinicName.trim(),
-    clinicType: form.clinicType as ClinicType,
     firstName: form.firstName.trim(),
     lastName: form.lastName.trim(),
     login: form.login.trim(),
     password: form.password,
     phoneNumber1: form.phoneNumber1.trim(),
+  }
+
+  if (isLab.value) {
+    emit('submit', {
+      applicationType: 'LAB',
+      ...base,
+    })
+    return
+  }
+
+  emit('submit', {
+    applicationType: 'CLINIC',
+    ...base,
+    clinicType: form.clinicType as ClinicType,
     phoneNumber2: form.phoneNumber2.trim(),
   })
 }
@@ -142,7 +172,7 @@ defineExpose({ resetForm })
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <div class="space-y-1.5 sm:col-span-2">
         <label for="clinicName" class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-          {{ t('registration.clinicName') }}
+          {{ isLab ? t('labRegistration.labName') : t('registration.clinicName') }}
         </label>
         <div class="relative">
           <Building2 class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -151,7 +181,7 @@ defineExpose({ resetForm })
             v-model="form.clinicName"
             type="text"
             required
-            :placeholder="t('registration.clinicNamePlaceholder')"
+            :placeholder="isLab ? t('labRegistration.labNamePlaceholder') : t('registration.clinicNamePlaceholder')"
             class="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-4 text-sm outline-none transition-colors focus:border-brand-primary dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-100"
             :class="fieldErrors.clinicName ? 'border-red-400' : ''"
             :disabled="props.loading"
@@ -175,7 +205,7 @@ defineExpose({ resetForm })
           @blur="touched.clinicType = true"
         >
           <option value="" disabled>{{ t('registration.clinicTypePlaceholder') }}</option>
-          <option v-for="type in CLINIC_TYPES" :key="type" :value="type">
+          <option v-for="type in REGISTRATION_TYPES" :key="type" :value="type">
             {{ t(`registration.clinicTypes.${type}`) }}
           </option>
         </select>
@@ -278,9 +308,9 @@ defineExpose({ resetForm })
         <p v-if="fieldErrors.password" class="text-xs text-red-500">{{ fieldErrors.password }}</p>
       </div>
 
-      <div class="space-y-1.5">
+      <div class="space-y-1.5" :class="isLab ? 'sm:col-span-2' : ''">
         <label for="phoneNumber1" class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-          {{ t('registration.phoneNumber1') }}
+          {{ isLab ? t('labRegistration.phone') : t('registration.phoneNumber1') }}
         </label>
         <div class="relative">
           <Phone class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -299,7 +329,7 @@ defineExpose({ resetForm })
         <p v-if="fieldErrors.phoneNumber1" class="text-xs text-red-500">{{ fieldErrors.phoneNumber1 }}</p>
       </div>
 
-      <div class="space-y-1.5">
+      <div v-if="!isLab" class="space-y-1.5">
         <label for="phoneNumber2" class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
           {{ t('registration.phoneNumber2') }}
         </label>

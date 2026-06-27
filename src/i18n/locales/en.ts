@@ -139,6 +139,8 @@ export default {
     subtitle: 'Enter your login and password to access the DMED Tool admin system.',
     loginLabel: 'Login',
     passwordLabel: 'Password',
+    loginPlaceholder: 'Enter your login',
+    passwordPlaceholder: 'Enter your password',
     loginRequired: 'Login is required',
     passwordRequired: 'Password is required',
     showPassword: 'Show password',

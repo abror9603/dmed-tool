@@ -1,11 +1,11 @@
 import { apiClient } from './http'
-import { DEMO_DASHBOARD_STATS } from '../data/dashboard.demo'
 import type { DashboardStats } from '../types/dashboard.types'
 
 interface ApiEnvelope<T> {
   success?: boolean
   message?: string
   object?: T
+  data?: T
 }
 
 function parseApiError(data: unknown): void {
@@ -16,23 +16,28 @@ function parseApiError(data: unknown): void {
   }
 }
 
-function isDashboardStats(value: unknown): value is DashboardStats {
-  if (!value || typeof value !== 'object') return false
-  const stats = value as DashboardStats
-  return Boolean(stats.medicalEvents && stats.clinics && stats.users && stats.dmedSync)
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value)
 }
 
-function parseDashboardStats(data: unknown): DashboardStats {
+function isDashboardStats(value: unknown): value is DashboardStats {
+  if (!isRecord(value)) return false
+  return Boolean(value.medicalEvents && value.clinics && value.users && value.dmedSync)
+}
+
+function extractStatsPayload(data: unknown): DashboardStats {
+  parseApiError(data)
+
   if (isDashboardStats(data)) {
     return data
   }
 
-  parseApiError(data)
-
-  if (data && typeof data === 'object') {
-    const root = data as ApiEnvelope<unknown>
-    if (isDashboardStats(root.object)) {
-      return root.object
+  if (isRecord(data)) {
+    for (const key of ['object', 'data', 'result', 'stats'] as const) {
+      const nested = data[key]
+      if (isDashboardStats(nested)) {
+        return nested
+      }
     }
   }
 
@@ -47,18 +52,21 @@ const DASHBOARD_ENDPOINTS = [
 
 export const dashboardService = {
   async getStats(): Promise<DashboardStats> {
+    let lastError: unknown
+
     for (const endpoint of DASHBOARD_ENDPOINTS) {
       try {
         const { data } = await apiClient.get<unknown>(endpoint)
-        return parseDashboardStats(data)
-      } catch {
-        continue
+        return extractStatsPayload(data)
+      } catch (err) {
+        lastError = err
       }
     }
 
-    return {
-      ...DEMO_DASHBOARD_STATS,
-      generatedAt: new Date().toISOString(),
+    if (lastError instanceof Error) {
+      throw lastError
     }
+
+    throw new Error('Dashboard ma\'lumotlari yuklanmadi')
   },
 }

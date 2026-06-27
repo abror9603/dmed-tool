@@ -25,12 +25,6 @@ const { heroCtas } = useLandingContent()
           class="lg:col-span-5 space-y-6 text-center lg:text-left"
         >
           
-          <!-- Yangilanish nishoni (Badge) -->
-          <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full border border-brand-primary/20 bg-brand-primary/5 text-brand-primary dark:bg-brand-primary/10 text-xs font-semibold uppercase tracking-wider">
-            <span class="flex h-2 w-2 rounded-full bg-brand-primary"></span>
-            <span>{{ t('hero.badge') }}</span>
-          </div>
-
           <!-- Asosiy sarlavha -->
           <h1 class="text-4xl sm:text-5xl font-black tracking-tight text-slate-900 dark:text-white leading-[1.15]">
             {{ t('hero.headline') }}

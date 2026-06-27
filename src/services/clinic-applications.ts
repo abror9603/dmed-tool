@@ -1,27 +1,40 @@
 import { apiClient } from './http'
 import { clinicsService, type ClinicPayload } from './clinics'
-import { usersService } from './users'
+import type { ApplicationType } from '../types/application.types'
 import type { ClinicType } from '../types/clinic.types'
 import { isAxiosError } from 'axios'
 
 export type { ClinicType } from '../types/clinic.types'
+export type { ApplicationType } from '../types/application.types'
 export { CLINIC_TYPES } from '../types/clinic.types'
 
 export type ApplicationStatus = 'PENDING' | 'APPROVED' | 'REJECTED'
 
-export interface ClinicApplicationApplyPayload {
+export interface BaseApplicationApplyPayload {
   clinicName: string
-  clinicType: ClinicType
   firstName: string
   lastName: string
   login: string
   password: string
   phoneNumber1: string
+}
+
+export interface ClinicApplicationApplyPayload extends BaseApplicationApplyPayload {
+  applicationType?: 'CLINIC'
+  clinicType: ClinicType
   phoneNumber2: string
 }
 
+export interface LabApplicationApplyPayload extends BaseApplicationApplyPayload {
+  applicationType: 'LAB'
+  phoneNumber2?: string
+}
+
+export type ApplicationApplyPayload = ClinicApplicationApplyPayload | LabApplicationApplyPayload
+
 export interface ClinicApplication {
   id: string | number
+  applicationType?: ApplicationType
   clinicName?: string
   clinicType?: ClinicType
   name?: string
@@ -54,6 +67,20 @@ function parseApiError(data: unknown): void {
   if (root.success === false) {
     throw new Error(root.message || 'Request failed')
   }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value)
+}
+
+function extractSecretKey(data: unknown): string | undefined {
+  if (!isRecord(data)) return undefined
+  if (typeof data.secretKey === 'string') return data.secretKey
+  const nested = data.object
+  if (isRecord(nested) && typeof nested.secretKey === 'string') {
+    return nested.secretKey
+  }
+  return undefined
 }
 
 function parseApplicationList(data: unknown): ClinicApplication[] {
@@ -92,7 +119,6 @@ function parseApplicationItem(data: unknown): ClinicApplication {
   throw new Error('Invalid application response')
 }
 
-/** Approve/reject often return `{}` or `{ success: true }` with no body object */
 function parseActionResponse(data: unknown): void {
   if (data == null) return
 
@@ -106,6 +132,10 @@ function parseActionResponse(data: unknown): void {
     const root = data as ApiEnvelope<unknown>
     if (root.success === true) return
   }
+}
+
+export function isLabApplication(app: ClinicApplication): boolean {
+  return app.applicationType === 'LAB'
 }
 
 export function getApplicationClinicName(app: ClinicApplication): string {
@@ -146,42 +176,19 @@ export const clinicApplicationsService = {
     return parseApplicationList(data)
   },
 
-  async apply(payload: ClinicApplicationApplyPayload): Promise<ClinicApplication> {
+  async apply(payload: ApplicationApplyPayload): Promise<ClinicApplication> {
     const { data } = await apiClient.post<unknown>('/api/v1/clinic-applications/apply', payload)
     return parseApplicationItem(data)
   },
 
-  async applyWithUser(payload: ClinicApplicationApplyPayload): Promise<ClinicApplication> {
-    const application = await this.apply(payload)
-
-    try {
-      await usersService.create({
-        login: payload.login,
-        password: payload.password,
-        firstName: payload.firstName,
-        lastName: payload.lastName,
-        accountType: 'USER',
-      })
-    } catch (err) {
-      if (isAxiosError(err)) {
-        const status = err.response?.status
-        if (status === 403 || status === 409 || status === 400) {
-          return application
-        }
-      }
-      throw err
-    }
-
-    return application
-  },
-
-  async approve(id: string | number): Promise<void> {
+  async approve(id: string | number): Promise<string | undefined> {
     const { data } = await apiClient.post<unknown>(`/api/v1/clinic-applications/${id}/approve`)
     parseActionResponse(data)
+    return extractSecretKey(data)
   },
 
-  async approveWithClinic(id: string | number, application: ClinicApplication): Promise<void> {
-    await this.approve(id)
+  async approveWithClinic(id: string | number, application: ClinicApplication): Promise<string | undefined> {
+    const secretKey = await this.approve(id)
 
     try {
       await clinicsService.create(applicationToClinicPayload(application))
@@ -189,11 +196,20 @@ export const clinicApplicationsService = {
       if (isAxiosError(err)) {
         const status = err.response?.status
         if (status === 403 || status === 409 || status === 400) {
-          return
+          return secretKey
         }
       }
       throw err
     }
+
+    return secretKey
+  },
+
+  async approveApplication(id: string | number, application: ClinicApplication): Promise<string | undefined> {
+    if (isLabApplication(application)) {
+      return this.approve(id)
+    }
+    return this.approveWithClinic(id, application)
   },
 
   async reject(id: string | number): Promise<void> {

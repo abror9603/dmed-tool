@@ -18,9 +18,16 @@ export function useAdminLabels() {
     return te(key) ? t(key) : type
   }
 
+  function applicationTypeLabel(type?: string): string {
+    if (!type) return t('applicationTypes.CLINIC')
+    const key = `applicationTypes.${type}`
+    return te(key) ? t(key) : type
+  }
+
   return {
     statusLabel,
     accountTypeLabel,
     alertTypeLabel,
+    applicationTypeLabel,
   }
 }

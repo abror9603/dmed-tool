@@ -15,13 +15,13 @@ const rootClass = computed(() => {
   if (props.hideLegend) {
     return 'inline-flex shrink-0'
   }
-  return 'flex w-full flex-col items-center gap-4 lg:flex-row lg:items-center lg:justify-center'
+  return 'inline-flex items-center gap-4 sm:gap-5'
 })
 </script>
 
 <template>
   <div :class="rootClass">
-    <div class="relative h-28 w-28 shrink-0 sm:h-32 sm:w-32">
+    <div class="relative h-28 w-28 shrink-0 sm:h-[7.5rem] sm:w-[7.5rem]">
       <svg viewBox="0 0 100 100" class="h-full w-full -rotate-90">
         <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(148,163,184,0.15)" stroke-width="10" />
         <circle
@@ -52,18 +52,16 @@ const rootClass = computed(() => {
       </div>
     </div>
 
-    <div v-if="!hideLegend" class="w-full min-w-[10rem] space-y-2 lg:w-auto lg:flex-1">
-      <div
+    <ul v-if="!hideLegend" class="min-w-[9.5rem] shrink-0 space-y-1.5">
+      <li
         v-for="segment in chartSegments"
         :key="`legend-${segment.key}`"
-        class="flex items-center justify-between gap-3 text-xs"
+        class="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2 text-xs"
       >
-        <div class="flex min-w-0 items-center gap-2">
-          <span class="h-2.5 w-2.5 shrink-0 rounded-full" :style="{ backgroundColor: segment.color }" />
-          <span class="truncate text-slate-300">{{ segment.key }}</span>
-        </div>
-        <span class="shrink-0 font-bold text-white">{{ segment.value }}</span>
-      </div>
-    </div>
+        <span class="h-2.5 w-2.5 shrink-0 rounded-full" :style="{ backgroundColor: segment.color }" />
+        <span class="truncate text-slate-300">{{ segment.key }}</span>
+        <span class="font-bold tabular-nums text-white">{{ segment.value }}</span>
+      </li>
+    </ul>
   </div>
 </template>

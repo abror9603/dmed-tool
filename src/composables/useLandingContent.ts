@@ -8,7 +8,7 @@ export function useLandingContent() {
   const heroCtas = computed(() => ({
     primary: {
       label: t('common.getStarted'),
-      href: '#how-it-works',
+      href: '#clinic-registration',
       variant: 'primary' as const,
     },
     secondary: {

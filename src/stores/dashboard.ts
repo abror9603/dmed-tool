@@ -46,7 +46,9 @@ export const useDashboardStore = defineStore('dashboard', () => {
       stats.value = await dashboardService.getStats()
     } catch (err) {
       error.value = getErrorMessage(err, i18n.global.t('dashboardPage.loadError'))
-      throw err
+      if (!options.silent) {
+        throw err
+      }
     } finally {
       if (!options.silent) {
         loading.value = false

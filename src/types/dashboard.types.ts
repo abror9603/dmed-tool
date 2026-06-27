@@ -37,6 +37,14 @@ export interface ClinicsByType {
   TEZYOR_103: number
 }
 
+export interface LabEventsStats {
+  total: number
+  today: number
+  normal: number
+  abnormal: number
+  critical: number
+}
+
 export interface DashboardStats {
   generatedAt: string
   medicalEvents: {
@@ -79,5 +87,6 @@ export interface DashboardStats {
     operators: number
     doctors: number
   }
+  labEvents?: LabEventsStats
   systemAlerts: SystemAlert[]
 }

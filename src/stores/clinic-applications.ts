@@ -3,8 +3,9 @@ import { ref } from 'vue'
 import { i18n } from '../i18n'
 import {
   clinicApplicationsService,
+  isLabApplication,
   type ApplicationStatus,
-  type ClinicApplicationApplyPayload,
+  type ApplicationApplyPayload,
 } from '../services/clinic-applications'
 import { useClinicsStore } from './clinics'
 import { getErrorMessage } from '../utils/errors'
@@ -43,7 +44,7 @@ export const useClinicApplicationsStore = defineStore('clinicApplications', () =
     }
   }
 
-  async function submitApplication(payload: ClinicApplicationApplyPayload): Promise<void> {
+  async function submitApplication(payload: ApplicationApplyPayload): Promise<void> {
     loading.value = true
     error.value = null
     try {
@@ -66,10 +67,14 @@ export const useClinicApplicationsStore = defineStore('clinicApplications', () =
       if (!application) {
         throw new Error(i18n.global.t('errors.applicationNotFound'))
       }
-      await clinicApplicationsService.approveWithClinic(id, application)
-      successMessage.value = i18n.global.t('errors.applicationApproved')
+      await clinicApplicationsService.approveApplication(id, application)
+      successMessage.value = isLabApplication(application)
+        ? i18n.global.t('errors.applicationApprovedLab')
+        : i18n.global.t('errors.applicationApproved')
       await fetchApplications()
-      await useClinicsStore().fetchAllClinics()
+      if (!isLabApplication(application)) {
+        await useClinicsStore().fetchAllClinics()
+      }
     } catch (err) {
       error.value = getErrorMessage(err, i18n.global.t('errors.applicationApprove'))
       throw err

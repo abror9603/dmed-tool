@@ -5,16 +5,19 @@ import { ClipboardList, Check, X, Phone, User, Calendar, Key } from 'lucide-vue-
 import AdminAlerts from '../../components/admin/AdminAlerts.vue'
 import AdminRefreshButton from '../../components/admin/AdminRefreshButton.vue'
 import { useAdminLabels } from '../../composables/useAdminLabels'
+import { useConfirmDialog } from '../../composables/useConfirmDialog'
 import { useClinicApplicationsStore } from '../../stores/clinic-applications'
 import {
   formatApplicationDate,
   getApplicationClinicName,
   getApplicationContactName,
+  isLabApplication,
   type ApplicationStatus,
 } from '../../services/clinic-applications'
 
 const { t } = useI18n()
-const { statusLabel } = useAdminLabels()
+const { statusLabel, applicationTypeLabel } = useAdminLabels()
+const { confirm } = useConfirmDialog()
 const store = useClinicApplicationsStore()
 
 const applications = computed(() => store.applications)
@@ -38,12 +41,26 @@ async function setFilter(status: ApplicationStatus | 'ALL'): Promise<void> {
 }
 
 async function approve(id: string | number): Promise<void> {
-  if (!confirm(t('applications.confirmApprove'))) return
+  const application = applications.value.find((app) => String(app.id) === String(id))
+  const isLab = application ? isLabApplication(application) : false
+  const ok = await confirm({
+    title: t('applications.approve'),
+    message: isLab ? t('applications.confirmApproveLab') : t('applications.confirmApprove'),
+    confirmLabel: t('applications.approve'),
+    variant: 'success',
+  })
+  if (!ok) return
   await store.approveApplication(id)
 }
 
 async function reject(id: string | number): Promise<void> {
-  if (!confirm(t('applications.confirmReject'))) return
+  const ok = await confirm({
+    title: t('applications.reject'),
+    message: t('applications.confirmReject'),
+    confirmLabel: t('applications.reject'),
+    variant: 'danger',
+  })
+  if (!ok) return
   await store.rejectApplication(id)
 }
 
@@ -117,7 +134,7 @@ onMounted(() => {
             <tr class="border-b border-slate-700/80 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
               <th class="px-3 py-2 text-left">{{ t('applications.table.id') }}</th>
               <th class="px-3 py-2 text-left">{{ t('applications.table.clinic') }}</th>
-              <th class="px-3 py-2 text-left">{{ t('applications.table.clinicType') }}</th>
+              <th class="px-3 py-2 text-left">{{ t('applications.table.type') }}</th>
               <th class="px-3 py-2 text-left">{{ t('applications.table.contact') }}</th>
               <th class="px-3 py-2 text-left">{{ t('applications.table.login') }}</th>
               <th class="px-3 py-2 text-left">{{ t('applications.table.phones') }}</th>
@@ -141,13 +158,15 @@ onMounted(() => {
                 </span>
               </td>
               <td class="px-3 py-2">
-                <span
-                  v-if="app.clinicType"
-                  class="inline-block rounded-full bg-slate-800 px-2 py-0.5 text-[11px] font-semibold text-slate-300"
+                <span class="inline-block rounded-full bg-slate-800 px-2 py-0.5 text-[11px] font-semibold text-slate-300">
+                  {{ applicationTypeLabel(app.applicationType) }}
+                </span>
+                <div
+                  v-if="app.clinicType && !isLabApplication(app)"
+                  class="mt-1 truncate text-[10px] text-slate-500"
                 >
                   {{ t(`registration.clinicTypes.${app.clinicType}`) }}
-                </span>
-                <span v-else class="text-slate-600">—</span>
+                </div>
               </td>
               <td class="px-3 py-2">
                 <div class="flex items-center gap-1 truncate">

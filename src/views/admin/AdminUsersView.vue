@@ -6,10 +6,12 @@ import AdminAlerts from '../../components/admin/AdminAlerts.vue'
 import AdminRefreshButton from '../../components/admin/AdminRefreshButton.vue'
 import { useUsersStore } from '../../stores/users'
 import { useAdminLabels } from '../../composables/useAdminLabels'
+import { useConfirmDialog } from '../../composables/useConfirmDialog'
 import type { AccountType, User } from '../../services/users'
 
 const { t } = useI18n()
 const { accountTypeLabel } = useAdminLabels()
+const { confirm, alert: showAlert } = useConfirmDialog()
 const store = useUsersStore()
 
 const users = computed(() => store.users)
@@ -85,7 +87,7 @@ function startEdit(user: User): void {
 
 async function saveUser(): Promise<void> {
   if (!editId.value || !formLogin.value.trim()) {
-    alert(t('users.fillRequired'))
+    await showAlert(t('users.fillRequired'))
     return
   }
 
@@ -144,7 +146,13 @@ async function goToPage(page: number): Promise<void> {
 }
 
 async function removeUser(id: number | string): Promise<void> {
-  if (!confirm(t('users.confirmDelete'))) return
+  const ok = await confirm({
+    title: t('common.delete'),
+    message: t('users.confirmDelete'),
+    confirmLabel: t('common.delete'),
+    variant: 'danger',
+  })
+  if (!ok) return
   if (editId.value === id) {
     resetEditForm()
   }

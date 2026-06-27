@@ -8,10 +8,12 @@ import {
   CalendarDays,
   ClipboardList,
   KeyRound,
+  FlaskConical,
   RefreshCw,
   Users,
   X,
 } from 'lucide-vue-next'
+import AdminAlerts from '../../components/admin/AdminAlerts.vue'
 import DashboardBarChart from '../../components/admin/dashboard/DashboardBarChart.vue'
 import DashboardDonutChart from '../../components/admin/dashboard/DashboardDonutChart.vue'
 import DashboardLineChart from '../../components/admin/dashboard/DashboardLineChart.vue'
@@ -88,6 +90,18 @@ const metricCards = computed(() => {
       accent: 'text-rose-400',
       badge: t('dashboardPage.metrics.keysBadge'),
     },
+    ...(stats.value.labEvents
+      ? [
+          {
+            key: 'labEvents',
+            icon: FlaskConical,
+            label: t('dashboardPage.metrics.labEvents'),
+            value: String(stats.value.labEvents.total),
+            sub: t('dashboardPage.metrics.labEventsToday', { count: stats.value.labEvents.today }),
+            accent: 'text-fuchsia-400',
+          },
+        ]
+      : []),
   ]
 })
 
@@ -120,6 +134,16 @@ const urgencyBars = computed(() => {
     { key: '4h', value: data['4h'], color: '#F59E0B', label: t('dashboardPage.urgency.4h') },
     { key: '8h', value: data['8h'], color: '#3B82F6', label: t('dashboardPage.urgency.8h') },
     { key: '24h', value: data['24h'], color: '#8B5CF6', label: t('dashboardPage.urgency.24h') },
+  ]
+})
+
+const labEventsSegments = computed(() => {
+  if (!stats.value?.labEvents) return []
+  const data = stats.value.labEvents
+  return [
+    { key: t('dashboardPage.labEvents.normal'), value: data.normal, color: '#10B981' },
+    { key: t('dashboardPage.labEvents.abnormal'), value: data.abnormal, color: '#F59E0B' },
+    { key: t('dashboardPage.labEvents.critical'), value: data.critical, color: '#EF4444' },
   ]
 })
 
@@ -238,6 +262,8 @@ onUnmounted(() => {
       </div>
     </div>
 
+    <AdminAlerts v-if="store.error" :error="store.error" />
+
     <div v-if="visibleAlerts.length" class="space-y-3">
       <div
         v-for="alert in visibleAlerts"
@@ -258,7 +284,7 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <section>
+    <section v-if="stats">
       <p class="mb-3 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">
         {{ t('dashboardPage.mainMetrics') }}
       </p>
@@ -298,10 +324,10 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <div class="flex min-h-[300px] min-w-0 flex-col rounded-2xl border border-slate-700/70 bg-[#111b2e] p-5">
+        <div class="flex min-h-[240px] min-w-0 flex-col rounded-2xl border border-slate-700/70 bg-[#111b2e] p-5">
           <h3 class="text-sm font-bold leading-snug text-white">{{ t('dashboardPage.charts.byStatus') }}</h3>
-          <div class="mt-4 flex flex-1 items-center">
-            <DashboardDonutChart class="w-full" :segments="statusSegments" />
+          <div class="mt-4 flex flex-1 items-center justify-center">
+            <DashboardDonutChart :segments="statusSegments" />
           </div>
         </div>
 
@@ -312,10 +338,20 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <div class="flex min-h-[300px] min-w-0 flex-col rounded-2xl border border-slate-700/70 bg-[#111b2e] p-5">
+        <div class="flex min-h-[240px] min-w-0 flex-col rounded-2xl border border-slate-700/70 bg-[#111b2e] p-5">
           <h3 class="text-sm font-bold leading-snug text-white">{{ t('dashboardPage.charts.clinicTypes') }}</h3>
-          <div class="mt-4 flex flex-1 items-center">
-            <DashboardDonutChart class="w-full" :segments="clinicTypeSegments" />
+          <div class="mt-4 flex flex-1 items-center justify-center">
+            <DashboardDonutChart :segments="clinicTypeSegments" />
+          </div>
+        </div>
+
+        <div
+          v-if="stats.labEvents"
+          class="flex min-h-[240px] min-w-0 flex-col rounded-2xl border border-slate-700/70 bg-[#111b2e] p-5 lg:col-span-2"
+        >
+          <h3 class="text-sm font-bold leading-snug text-white">{{ t('dashboardPage.charts.labEvents') }}</h3>
+          <div class="mt-4 flex flex-1 items-center justify-center">
+            <DashboardDonutChart :segments="labEventsSegments" />
           </div>
         </div>
       </div>
@@ -466,6 +502,13 @@ onUnmounted(() => {
     <div v-if="loading && !stats" class="flex items-center justify-center py-20 text-sm text-slate-400">
       <RefreshCw class="mr-2 h-4 w-4 animate-spin" />
       {{ t('common.loading') }}
+    </div>
+
+    <div
+      v-else-if="!stats && !loading && !store.error"
+      class="rounded-2xl border border-dashed border-slate-700/70 py-16 text-center text-sm text-slate-500"
+    >
+      {{ t('dashboardPage.noData') }}
     </div>
   </div>
 </template>

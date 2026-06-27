@@ -1,8 +1,7 @@
 /**
- * Auth store — orchestrates login/logout and mirrors `authSession` into reactive state.
+ * Auth store — orchestrates login/logout and mirrors session user into reactive state.
  *
- * `syncFromSession()` is called on every route change so hard refreshes and
- * interceptor-driven logouts stay consistent with Pinia.
+ * Bearer token is stored in an HttpOnly cookie (not accessible from JavaScript).
  */
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
@@ -14,16 +13,44 @@ import type { AuthUser, LoginCredentials } from '../types/auth.types'
 import { getErrorMessage } from '../utils/errors'
 
 export const useAuthStore = defineStore('auth', () => {
-  const token = ref<string | null>(authSession.getToken())
   const user = ref<AuthUser | null>(authSession.getUser())
+  const sessionActive = ref(false)
   const loading = ref(false)
   const error = ref<string | null>(null)
 
-  const isAuthenticated = computed(() => Boolean(token.value))
+  const isAuthenticated = computed(() => sessionActive.value)
 
   function syncFromSession(): void {
-    token.value = authSession.getToken()
     user.value = authSession.getUser()
+    sessionActive.value = Boolean(user.value)
+  }
+
+  async function restoreSession(): Promise<boolean> {
+    try {
+      const session = await authService.getSession()
+      if (!session.authenticated) {
+        authSession.clearUser()
+        user.value = null
+        sessionActive.value = false
+        return false
+      }
+
+      sessionActive.value = true
+
+      if (session.user) {
+        authSession.setUser(session.user)
+        user.value = session.user
+      } else {
+        user.value = authSession.getUser()
+      }
+
+      return true
+    } catch {
+      authSession.clearUser()
+      user.value = null
+      sessionActive.value = false
+      return false
+    }
   }
 
   async function login(credentials: LoginCredentials): Promise<void> {
@@ -33,9 +60,9 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const response = await authService.login(credentials)
       const sessionUser = response.user ?? { id: 0, login: credentials.login }
-      authSession.setSession(response.token, sessionUser)
-      token.value = response.token
+      authSession.setUser(sessionUser)
       user.value = sessionUser
+      sessionActive.value = true
     } catch (err) {
       error.value = getErrorMessage(err, i18n.global.t('errors.loginFailed'))
       throw err
@@ -45,9 +72,15 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function logout(): Promise<void> {
-    authSession.clearSession()
-    token.value = null
+    try {
+      await authService.logout()
+    } catch {
+      // Clear local state even if the logout request fails.
+    }
+
+    authSession.clearUser()
     user.value = null
+    sessionActive.value = false
     error.value = null
     await router.push({ name: ROUTE_NAMES.LOGIN })
   }
@@ -57,12 +90,12 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   return {
-    token,
     user,
     loading,
     error,
     isAuthenticated,
     syncFromSession,
+    restoreSession,
     login,
     logout,
     clearError,

@@ -13,6 +13,10 @@ export interface AuthUser {
 }
 
 export interface LoginResponse {
-  token: string
+  user: AuthUser
+}
+
+export interface SessionResponse {
+  authenticated: boolean
   user?: AuthUser
 }

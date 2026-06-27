@@ -19,8 +19,8 @@ export function isRecord(value: unknown): value is Record<string, unknown> {
 /** Throws when the backend signals failure inside a 2xx body. */
 export function parseApiError(data: unknown): void {
   if (!isRecord(data)) return
-  const root = data as ApiEnvelope
-  if (root.success === false) {
+  const root = data as ApiEnvelope & { status?: boolean }
+  if (root.success === false || root.status === false) {
     throw new Error(root.message || 'Request failed')
   }
 }

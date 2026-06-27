@@ -177,6 +177,24 @@ export default {
     viewDocs: 'API hujjatlari',
     apiSettings: 'API sozlamalari',
     apiSettingsDesc: 'Backend server manzilini sozlash',
+    testingSettings: 'Testlash',
+    testingSettingsDesc: 'Tibbiy hodisa ma\'lumotlarini yuborib, tanlangan shaxsga SMS test qilish',
+    testingSmsSent: '{name} ga SMS yuborildi',
+    testingSmsFailed: 'SMS yuborishda xatolik',
+    testingSelectClinic: 'Klinika',
+    testingSelectClinicPlaceholder: 'Klinikani tanlang...',
+    testingSelectClinicHint: 'Faol klinikani tanlang — secret key avtomatik to\'ldiriladi.',
+    testingKeyValid: 'Secret key tasdiqlandi: {name}',
+    testingKeyValidFallback: 'klinika',
+    testingSecretKeyHint: 'Klinika secret key kalitini qo\'lda kiriting. Tekshirish tugmasi orqali kalit to\'g\'riligini tasdiqlashingiz mumkin.',
+    testingKeyNotFound: 'Secret key topilmadi. Faol klinikani tanlang yoki to\'liq kalitni kiriting.',
+    testingPatientNotInDmed:
+      'Bemor DMED tizimida topilmadi. Har bir shaxs uchun unga biriktirilgan bemorning haqiqiy 14 xonali JSHSHIR raqamini kiriting.',
+    testingJshshirHint:
+      'Har bir shaxs uchun alohida JSHSHIR kiriting. Bu raqam DMEDda ro\'yxatdan o\'tgan bemor bo\'lishi va shu shaxsga biriktirilgan bo\'lishi kerak.',
+    testingJshshirInvalid: 'JSHSHIR 14 ta raqamdan iborat bo\'lishi kerak.',
+    testingRecipientJshshirRequired: '{name} uchun JSHSHIR kiriting.',
+    testingSendSms: 'SMS yuborish',
     stats: {
       totalClinics: 'Jami klinikalar',
       activeClinics: 'Faol klinikalar',
@@ -392,7 +410,7 @@ export default {
     },
     keyCreatedOnActivate: 'Holat faollashtirilganda yaratiladi',
     copyKey: 'Kalitni nusxalash',
-    validateKeyError: 'Kalit tekshirishda xatolik yuz berdi.',
+    validateKeyError: 'Secret key tekshirilmadi. Klinikani tanlang yoki kalit to\'g\'riligini tekshiring.',
     ngrokHint:
       'Ngrok tunneli qayta yoqilganda manzili o\'zgarishi mumkin. Yangi URL ni shu yerga kiritishingiz mumkin.',
     validationId: 'ID',
@@ -587,5 +605,25 @@ export default {
     userUpdate: 'Foydalanuvchini yangilashda xatolik.',
     userDeleted: 'Foydalanuvchi o\'chirildi!',
     userDelete: 'Foydalanuvchini o\'chirishda xatolik.',
+    api: {
+      KEY_NOT_FOUND:
+        'Kiritilgan secret key (X-Secret-Key) serverda topilmadi. Bu login sessiyasi emas — klinika kalitini to\'g\'ri kiritganingizni tekshiring.',
+      PATIENT_NOT_IN_DMED:
+        'Bemor DMED tizimida topilmadi. Haqiqiy va shu shaxsga biriktirilgan 14 xonali JSHSHIR kiriting.',
+      INVALID_CLINIC_RESPONSE:
+        'Kalit tekshirildi, lekin server klinika haqida aniq ma\'lumot qaytarmadi. Klinikani ro\'yxatdan tanlab qayta urinib ko\'ring.',
+      REQUEST_FAILED: 'So\'rov bajarilmadi. Ma\'lumotlarni tekshirib, qayta urinib ko\'ring.',
+      NETWORK_ERROR: 'Serverga ulanib bo\'lmadi. Internet aloqasi va API manzilini tekshiring.',
+      ACCESS_DENIED: 'Kirish rad etildi. Qaytadan tizimga kiring.',
+      UNAUTHORIZED: 'Sessiya tugagan. Qaytadan tizimga kiring.',
+      FORBIDDEN: 'Bu amal uchun ruxsat yo\'q.',
+      NOT_FOUND: 'So\'ralgan ma\'lumot topilmadi.',
+      UPSTREAM_UNAVAILABLE: 'Server hozir ishlamayapti. Birozdan keyin qayta urinib ko\'ring.',
+      SERVER_ERROR: 'Serverda xatolik yuz berdi. Birozdan keyin qayta urinib ko\'ring.',
+      INVALID_LOGIN_RESPONSE: 'Kirish javobi noto\'g\'ri. Login va parolni tekshirib qayta urinib ko\'ring.',
+      KEY_INACTIVE: 'Bu secret key faol emas. Klinikani faollashtiring yoki yangi kalit oling.',
+      KEY_EXPIRED: 'Secret key muddati tugagan. Yangi kalit oling.',
+      CLINIC_INACTIVE: 'Klinika faol emas. Avval klinikani faollashtiring.',
+    },
   },
 }

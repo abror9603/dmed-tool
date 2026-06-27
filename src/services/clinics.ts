@@ -5,6 +5,7 @@ import { apiClient } from './http'
 import { buildPageResult, type PaginatedResult } from './api-page'
 import {
   extractRecordArray,
+  isRecord,
   parseActionResponse,
   parseApiError,
   unwrapEnvelopeObject,
@@ -17,7 +18,9 @@ export type { Clinic, ClinicPayload, ClinicsQuery } from '../types/clinic.types'
 export type ClinicsPage = PaginatedResult<Clinic>
 
 function isClinicLike(value: Record<string, unknown>): boolean {
-  return 'id' in value && ('name' in value || 'clinicName' in value)
+  const hasId = 'id' in value || 'clinicId' in value
+  const hasName = 'name' in value || 'clinicName' in value
+  return hasId && hasName
 }
 
 function normalizeClinic(raw: Record<string, unknown>): Clinic {
@@ -29,7 +32,7 @@ function normalizeClinic(raw: Record<string, unknown>): Clinic {
     raw.contact
 
   return {
-    id: raw.id as number | string,
+    id: (raw.id ?? raw.clinicId) as number | string,
     name: String(raw.name ?? raw.clinicName ?? ''),
     address: String(raw.address ?? '—'),
     phone: phone ? String(phone) : undefined,
@@ -54,7 +57,29 @@ function parseClinicItem(data: unknown): Clinic {
   }
 
   parseApiError(data)
-  throw new Error('Invalid clinic response')
+  throw new Error('INVALID_CLINIC_RESPONSE')
+}
+
+function parseValidateKeyResponse(data: unknown): Clinic {
+  parseApiError(data)
+
+  const direct = unwrapEnvelopeObject(data)
+  if (direct && isClinicLike(direct)) {
+    return normalizeClinic(direct)
+  }
+
+  if (isRecord(data) && data.success === true) {
+    return {
+      id: direct && 'id' in direct ? (direct.id as number | string) : 0,
+      name: direct ? String(direct.name ?? direct.clinicName ?? '') : '',
+      address: '—',
+      email: '',
+      status: 'ACTIVE',
+      secretKey: null,
+    }
+  }
+
+  throw new Error('INVALID_CLINIC_RESPONSE')
 }
 
 function parseClinicsPage(data: unknown, page: number, size: number): ClinicsPage {
@@ -116,6 +141,6 @@ export const clinicsService = {
     const { data } = await apiClient.get<unknown>('/api/v1/clinics/validate-key', {
       params: { secretKey },
     })
-    return parseClinicItem(data)
+    return parseValidateKeyResponse(data)
   },
 }

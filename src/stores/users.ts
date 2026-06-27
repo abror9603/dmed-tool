@@ -2,11 +2,12 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { i18n } from '../i18n'
 import { usersService, type UserPayload, type UsersQuery } from '../services/users'
+import { DEFAULT_PAGE_SIZE } from '../utils/pagination'
 import { getErrorMessage } from '../utils/errors'
 
 const DEFAULT_FILTERS: UsersQuery = {
   page: 0,
-  size: 30,
+  size: DEFAULT_PAGE_SIZE,
 }
 
 export const useUsersStore = defineStore('users', () => {

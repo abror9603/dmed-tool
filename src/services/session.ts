@@ -1,3 +1,9 @@
+/**
+ * Browser session persistence for auth credentials.
+ *
+ * Intentionally separate from Pinia: the HTTP interceptor and router guards
+ * must read the token without initializing the Vue app or store lifecycle.
+ */
 import { STORAGE_KEYS } from '../config/app'
 import type { AuthUser } from '../types/auth.types'
 

@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { ClipboardList, Check, X, Phone, User, Calendar, Key } from 'lucide-vue-next'
 import AdminAlerts from '../../components/admin/AdminAlerts.vue'
 import AdminRefreshButton from '../../components/admin/AdminRefreshButton.vue'
+import AdminPagination from '../../components/admin/AdminPagination.vue'
 import { useAdminLabels } from '../../composables/useAdminLabels'
 import { useConfirmDialog } from '../../composables/useConfirmDialog'
 import { useClinicApplicationsStore } from '../../stores/clinic-applications'
@@ -14,6 +15,7 @@ import {
   isLabApplication,
   type ApplicationStatus,
 } from '../../services/clinic-applications'
+import { DEFAULT_PAGE_SIZE, rowNumber } from '../../utils/pagination'
 
 const { t } = useI18n()
 const { statusLabel, applicationTypeLabel } = useAdminLabels()
@@ -21,6 +23,9 @@ const { confirm } = useConfirmDialog()
 const store = useClinicApplicationsStore()
 
 const applications = computed(() => store.applications)
+const total = computed(() => store.total)
+const currentPage = computed(() => store.query.page ?? 0)
+const pageSize = computed(() => store.query.size ?? DEFAULT_PAGE_SIZE)
 const loading = computed(() => store.loading)
 
 const statusTabs = computed(() => [
@@ -37,7 +42,12 @@ async function refresh(): Promise<void> {
 
 async function setFilter(status: ApplicationStatus | 'ALL'): Promise<void> {
   store.clearMessages()
-  await store.fetchApplications(status)
+  await store.fetchApplications(status, 0)
+}
+
+async function goToPage(page: number): Promise<void> {
+  store.clearMessages()
+  await store.fetchApplications(undefined, page)
 }
 
 async function approve(id: string | number): Promise<void> {
@@ -106,7 +116,7 @@ onMounted(() => {
         <ClipboardList class="h-4 w-4 text-cyan-400" />
         <h2 class="text-sm font-bold text-white">{{ t('applications.listTitle') }}</h2>
         <span class="ml-auto rounded-full bg-slate-800 px-2 py-0.5 font-mono text-[10px] text-slate-400">
-          {{ applications.length }}
+          {{ total }}
         </span>
       </div>
 
@@ -145,12 +155,12 @@ onMounted(() => {
           </thead>
           <tbody class="divide-y divide-slate-800/80 text-slate-300">
             <tr
-              v-for="app in applications"
+              v-for="(app, index) in applications"
               :key="String(app.id)"
               class="hover:bg-slate-800/40"
             >
-              <td class="px-3 py-2 font-mono text-[11px] text-slate-500" :title="String(app.id)">
-                {{ String(app.id).slice(0, 8) }}…
+              <td class="px-3 py-2 text-[11px] font-semibold tabular-nums text-slate-400">
+                {{ rowNumber(currentPage, pageSize, index) }}
               </td>
               <td class="px-3 py-2">
                 <span class="line-clamp-2 font-semibold text-white" :title="getApplicationClinicName(app)">
@@ -227,6 +237,14 @@ onMounted(() => {
           </tbody>
         </table>
       </div>
+
+      <AdminPagination
+        :page="currentPage"
+        :total="total"
+        :page-size="pageSize"
+        :loading="loading"
+        @change="goToPage"
+      />
     </div>
   </div>
 </template>

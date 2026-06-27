@@ -1,3 +1,9 @@
+/**
+ * Authentication API — login only.
+ *
+ * Session persistence is handled by `authSession`; navigation by `useAuthStore`.
+ * Response parsing is defensive because the legacy login endpoint nests token/user variably.
+ */
 import type { AuthUser, LoginCredentials, LoginResponse } from '../types/auth.types'
 import { apiClient } from './http'
 

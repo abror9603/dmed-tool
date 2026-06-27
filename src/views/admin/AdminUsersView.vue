@@ -4,10 +4,13 @@ import { useI18n } from 'vue-i18n'
 import { Users, Trash2, Search, Edit2 } from 'lucide-vue-next'
 import AdminAlerts from '../../components/admin/AdminAlerts.vue'
 import AdminRefreshButton from '../../components/admin/AdminRefreshButton.vue'
+import AdminPagination from '../../components/admin/AdminPagination.vue'
+import AppSelect from '../../components/ui/AppSelect.vue'
 import { useUsersStore } from '../../stores/users'
 import { useAdminLabels } from '../../composables/useAdminLabels'
 import { useConfirmDialog } from '../../composables/useConfirmDialog'
 import type { AccountType, User } from '../../services/users'
+import { DEFAULT_PAGE_SIZE, rowNumber } from '../../utils/pagination'
 
 const { t } = useI18n()
 const { accountTypeLabel } = useAdminLabels()
@@ -18,8 +21,7 @@ const users = computed(() => store.users)
 const loading = computed(() => store.loading)
 const total = computed(() => store.total)
 const currentPage = computed(() => store.filters.page ?? 0)
-const pageSize = computed(() => store.filters.size ?? 30)
-const totalPages = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value)))
+const pageSize = computed(() => store.filters.size ?? DEFAULT_PAGE_SIZE)
 
 const editId = ref<number | string | null>(null)
 const formLogin = ref('')
@@ -140,7 +142,7 @@ async function resetFilters(): Promise<void> {
 }
 
 async function goToPage(page: number): Promise<void> {
-  if (page < 0 || page >= totalPages.value || page === currentPage.value) return
+  if (page < 0 || page === currentPage.value) return
   store.clearMessages()
   await store.fetchUsers({ page })
 }
@@ -184,14 +186,11 @@ onMounted(() => {
     >
       <label class="space-y-1">
         <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">{{ t('users.accountType') }}</span>
-        <select
-          v-model="draftFilters.accountType"
-          class="w-full rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-xs text-slate-200"
-        >
+        <AppSelect v-model="draftFilters.accountType">
           <option v-for="opt in accountTypeOptions" :key="opt.value || 'all'" :value="opt.value">
             {{ opt.label }}
           </option>
-        </select>
+        </AppSelect>
       </label>
 
       <label class="space-y-1">
@@ -255,7 +254,6 @@ onMounted(() => {
       <h2 class="flex items-center gap-2 border-b border-slate-700/80 pb-3 text-sm font-bold text-white">
         <Edit2 class="h-4.5 w-4.5 text-brand-primary" />
         <span>{{ t('users.editUser') }}</span>
-        <span class="ml-auto font-mono text-xxs text-slate-400">#{{ editId }}</span>
       </h2>
 
       <form class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3" @submit.prevent="saveUser">
@@ -282,14 +280,11 @@ onMounted(() => {
 
         <label class="space-y-1">
           <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">{{ t('users.accountType') }}</span>
-          <select
-            v-model="formAccountType"
-            class="w-full rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-xs text-slate-200"
-          >
+          <AppSelect v-model="formAccountType">
             <option v-for="opt in editAccountTypeOptions" :key="opt.value || 'none'" :value="opt.value">
               {{ opt.label }}
             </option>
-          </select>
+          </AppSelect>
         </label>
 
         <label class="space-y-1">
@@ -397,8 +392,10 @@ onMounted(() => {
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-800/80 text-slate-300">
-            <tr v-for="user in users" :key="user.id" class="hover:bg-slate-800/40">
-              <td class="px-3 py-2 font-mono text-[11px] text-slate-500">#{{ user.id }}</td>
+            <tr v-for="(user, index) in users" :key="user.id" class="hover:bg-slate-800/40">
+              <td class="px-3 py-2 text-[11px] font-semibold tabular-nums text-slate-400">
+                {{ rowNumber(currentPage, pageSize, index) }}
+              </td>
               <td class="px-3 py-2 truncate font-semibold text-white" :title="user.login">{{ user.login }}</td>
               <td class="px-3 py-2 truncate" :title="[user.firstName, user.lastName].filter(Boolean).join(' ')">
                 {{ [user.firstName, user.lastName].filter(Boolean).join(' ') || '—' }}
@@ -441,32 +438,13 @@ onMounted(() => {
         </table>
       </div>
 
-      <div
-        v-if="total > pageSize"
-        class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-700/80 px-4 py-3"
-      >
-        <p class="text-xs text-slate-500">
-          {{ t('users.pagination', { page: currentPage + 1, total: totalPages, count: total }) }}
-        </p>
-        <div class="flex gap-2">
-          <button
-            type="button"
-            class="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-bold text-slate-400 disabled:opacity-40"
-            :disabled="currentPage <= 0 || loading"
-            @click="goToPage(currentPage - 1)"
-          >
-            {{ t('users.prevPage') }}
-          </button>
-          <button
-            type="button"
-            class="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-bold text-slate-400 disabled:opacity-40"
-            :disabled="currentPage >= totalPages - 1 || loading"
-            @click="goToPage(currentPage + 1)"
-          >
-            {{ t('users.nextPage') }}
-          </button>
-        </div>
-      </div>
+      <AdminPagination
+        :page="currentPage"
+        :total="total"
+        :page-size="pageSize"
+        :loading="loading"
+        @change="goToPage"
+      />
     </div>
   </div>
 </template>

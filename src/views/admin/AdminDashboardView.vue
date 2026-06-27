@@ -8,7 +8,6 @@ import {
   CalendarDays,
   ClipboardList,
   KeyRound,
-  FlaskConical,
   RefreshCw,
   Users,
   X,
@@ -90,18 +89,6 @@ const metricCards = computed(() => {
       accent: 'text-rose-400',
       badge: t('dashboardPage.metrics.keysBadge'),
     },
-    ...(stats.value.labEvents
-      ? [
-          {
-            key: 'labEvents',
-            icon: FlaskConical,
-            label: t('dashboardPage.metrics.labEvents'),
-            value: String(stats.value.labEvents.total),
-            sub: t('dashboardPage.metrics.labEventsToday', { count: stats.value.labEvents.today }),
-            accent: 'text-fuchsia-400',
-          },
-        ]
-      : []),
   ]
 })
 
@@ -115,15 +102,28 @@ const statusSegments = computed(() => {
   ]
 })
 
-const clinicTypeSegments = computed(() => {
+const statusTotal = computed(() => {
+  if (!stats.value) return 0
+  const data = stats.value.medicalEvents.byStatus
+  return data.PENDING + data.NOTIFIED + data.FAILED
+})
+
+const statusNotifiedRate = computed(() => {
+  if (!stats.value || statusTotal.value === 0) return 0
+  return Math.round((stats.value.medicalEvents.byStatus.NOTIFIED / statusTotal.value) * 1000) / 10
+})
+
+const clinicTypeBars = computed(() => {
   if (!stats.value) return []
   const data = stats.value.clinics.byType
   return [
-    { key: t('dashboardPage.clinicTypes.DAVLAT'), value: data.DAVLAT, color: '#3B82F6' },
-    { key: t('dashboardPage.clinicTypes.XUSUSIY'), value: data.XUSUSIY, color: '#8B5CF6' },
-    { key: t('dashboardPage.clinicTypes.TEZYOR_103'), value: data.TEZYOR_103, color: '#10B981' },
+    { key: 'DAVLAT', value: data.DAVLAT, color: '#3B82F6', label: t('dashboardPage.clinicTypes.DAVLAT') },
+    { key: 'XUSUSIY', value: data.XUSUSIY, color: '#8B5CF6', label: t('dashboardPage.clinicTypes.XUSUSIY') },
+    { key: 'TEZYOR_103', value: data.TEZYOR_103, color: '#10B981', label: t('dashboardPage.clinicTypes.TEZYOR_103') },
   ]
 })
+
+const chartSecondarySpan = computed(() => (stats.value?.labEvents ? 'lg:col-span-3' : 'lg:col-span-2'))
 
 const urgencyBars = computed(() => {
   if (!stats.value) return []
@@ -137,13 +137,13 @@ const urgencyBars = computed(() => {
   ]
 })
 
-const labEventsSegments = computed(() => {
+const labEventsBars = computed(() => {
   if (!stats.value?.labEvents) return []
   const data = stats.value.labEvents
   return [
-    { key: t('dashboardPage.labEvents.normal'), value: data.normal, color: '#10B981' },
-    { key: t('dashboardPage.labEvents.abnormal'), value: data.abnormal, color: '#F59E0B' },
-    { key: t('dashboardPage.labEvents.critical'), value: data.critical, color: '#EF4444' },
+    { key: 'normal', value: data.normal, color: '#10B981', label: t('dashboardPage.labEvents.normal') },
+    { key: 'abnormal', value: data.abnormal, color: '#F59E0B', label: t('dashboardPage.labEvents.abnormal') },
+    { key: 'critical', value: data.critical, color: '#EF4444', label: t('dashboardPage.labEvents.critical') },
   ]
 })
 
@@ -288,7 +288,7 @@ onUnmounted(() => {
       <p class="mb-3 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">
         {{ t('dashboardPage.mainMetrics') }}
       </p>
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
+      <div class="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
         <div
           v-for="card in metricCards"
           :key="card.key"
@@ -316,42 +316,76 @@ onUnmounted(() => {
       <p class="mb-3 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">
         {{ t('dashboardPage.chartsTitle') }}
       </p>
-      <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <div class="flex min-h-[300px] min-w-0 flex-col rounded-2xl border border-slate-700/70 bg-[#111b2e] p-5">
+      <div class="grid grid-cols-1 gap-4 lg:grid-cols-6">
+        <div class="flex min-h-[320px] min-w-0 flex-col rounded-2xl border border-slate-700/70 bg-[#111b2e] p-5 lg:col-span-6">
           <h3 class="text-sm font-bold leading-snug text-white">{{ t('dashboardPage.charts.last30Days') }}</h3>
-          <div class="mt-4 flex flex-1 items-center">
+          <div class="mt-3 flex flex-1 items-stretch">
             <DashboardLineChart class="w-full" :points="stats.medicalEvents.last30Days" />
           </div>
         </div>
 
-        <div class="flex min-h-[240px] min-w-0 flex-col rounded-2xl border border-slate-700/70 bg-[#111b2e] p-5">
+        <div
+          class="flex min-h-[360px] min-w-0 flex-col rounded-2xl border border-slate-700/70 bg-[#111b2e] p-5"
+          :class="chartSecondarySpan"
+        >
           <h3 class="text-sm font-bold leading-snug text-white">{{ t('dashboardPage.charts.byStatus') }}</h3>
-          <div class="mt-4 flex flex-1 items-center justify-center">
-            <DashboardDonutChart :segments="statusSegments" />
+          <div class="mt-5 flex flex-col items-center gap-4 text-center sm:flex-row sm:items-center sm:text-left">
+            <DashboardDonutChart
+              hide-legend
+              :segments="statusSegments"
+              :center-label="`${statusNotifiedRate}%`"
+              :center-sub-label="t('dashboardPage.statusRateLabel')"
+            />
+            <div class="shrink-0 space-y-1 sm:max-w-[11rem]">
+              <p class="text-sm font-semibold leading-snug text-white">{{ t('dashboardPage.statusDegree') }}</p>
+              <p class="text-xs leading-relaxed text-slate-400">
+                {{ t('dashboardPage.totalStatusEvents', { count: statusTotal }) }}
+              </p>
+            </div>
+          </div>
+          <div class="mt-auto space-y-3 border-t border-slate-800 pt-4 text-sm">
+            <div class="flex items-start justify-between gap-4 text-slate-300">
+              <span class="min-w-0 flex-1 leading-snug">{{ statusLabel('PENDING') }}</span>
+              <span class="shrink-0 font-bold text-amber-400">{{ stats.medicalEvents.byStatus.PENDING }}</span>
+            </div>
+            <div class="flex items-start justify-between gap-4 text-slate-300">
+              <span class="min-w-0 flex-1 leading-snug">{{ statusLabel('NOTIFIED') }}</span>
+              <span class="shrink-0 font-bold text-emerald-400">{{ stats.medicalEvents.byStatus.NOTIFIED }}</span>
+            </div>
+            <div class="flex items-start justify-between gap-4 text-slate-300">
+              <span class="min-w-0 flex-1 leading-snug">{{ statusLabel('FAILED') }}</span>
+              <span class="shrink-0 font-bold text-rose-400">{{ stats.medicalEvents.byStatus.FAILED }}</span>
+            </div>
           </div>
         </div>
 
-        <div class="flex min-h-[300px] min-w-0 flex-col rounded-2xl border border-slate-700/70 bg-[#111b2e] p-5">
+        <div
+          class="flex min-h-[260px] min-w-0 flex-col rounded-2xl border border-slate-700/70 bg-[#111b2e] p-5"
+          :class="chartSecondarySpan"
+        >
           <h3 class="text-sm font-bold leading-snug text-white">{{ t('dashboardPage.charts.byUrgency') }}</h3>
-          <div class="mt-4 flex flex-1 items-end">
+          <div class="mt-3 flex flex-1 items-stretch">
             <DashboardBarChart class="w-full" :items="urgencyBars" />
           </div>
         </div>
 
-        <div class="flex min-h-[240px] min-w-0 flex-col rounded-2xl border border-slate-700/70 bg-[#111b2e] p-5">
+        <div
+          class="flex min-h-[260px] min-w-0 flex-col rounded-2xl border border-slate-700/70 bg-[#111b2e] p-5"
+          :class="chartSecondarySpan"
+        >
           <h3 class="text-sm font-bold leading-snug text-white">{{ t('dashboardPage.charts.clinicTypes') }}</h3>
-          <div class="mt-4 flex flex-1 items-center justify-center">
-            <DashboardDonutChart :segments="clinicTypeSegments" />
+          <div class="mt-3 flex flex-1 items-stretch">
+            <DashboardBarChart class="w-full" compact :items="clinicTypeBars" />
           </div>
         </div>
 
         <div
           v-if="stats.labEvents"
-          class="flex min-h-[240px] min-w-0 flex-col rounded-2xl border border-slate-700/70 bg-[#111b2e] p-5 lg:col-span-2"
+          class="flex min-h-[260px] min-w-0 flex-col rounded-2xl border border-slate-700/70 bg-[#111b2e] p-5 lg:col-span-3"
         >
           <h3 class="text-sm font-bold leading-snug text-white">{{ t('dashboardPage.charts.labEvents') }}</h3>
-          <div class="mt-4 flex flex-1 items-center justify-center">
-            <DashboardDonutChart :segments="labEventsSegments" />
+          <div class="mt-3 flex flex-1 items-stretch">
+            <DashboardBarChart class="w-full" compact :items="labEventsBars" />
           </div>
         </div>
       </div>

@@ -1,6 +1,15 @@
 import { apiClient } from './http'
+import { buildPageResult, type PaginatedResult } from './api-page'
+import { DEFAULT_PAGE_SIZE } from '../utils/pagination'
 
 export { apiClient, getApiUrl, getResolvedApiUrl } from './http'
+
+export interface ClinicsQuery {
+  page?: number
+  size?: number
+}
+
+export type ClinicsPage = PaginatedResult<Clinic>
 
 export interface ClinicPayload {
   name: string
@@ -134,15 +143,30 @@ function parseActionResponse(data: unknown): void {
   }
 }
 
+function parseClinicsPage(data: unknown, page: number, size: number): ClinicsPage {
+  return buildPageResult(parseClinicList(data), data, page, size)
+}
+
+function buildClinicsParams(query: ClinicsQuery = {}): Record<string, number> {
+  return {
+    page: query.page ?? 0,
+    size: query.size ?? DEFAULT_PAGE_SIZE,
+  }
+}
+
 export const clinicsService = {
   async create(payload: ClinicPayload): Promise<Clinic> {
     const { data } = await apiClient.post<unknown>('/api/v1/clinics', payload)
     return parseClinicItem(data)
   },
 
-  async getAll(): Promise<Clinic[]> {
-    const { data } = await apiClient.get<unknown>('/api/v1/clinics')
-    return parseClinicList(data)
+  async getPage(query: ClinicsQuery = {}): Promise<ClinicsPage> {
+    const page = query.page ?? 0
+    const size = query.size ?? DEFAULT_PAGE_SIZE
+    const { data } = await apiClient.get<unknown>('/api/v1/clinics', {
+      params: buildClinicsParams(query),
+    })
+    return parseClinicsPage(data, page, size)
   },
 
   async getById(id: string | number): Promise<Clinic> {
@@ -150,9 +174,13 @@ export const clinicsService = {
     return parseClinicItem(data)
   },
 
-  async getByStatus(status: 'ACTIVE' | 'INACTIVE'): Promise<Clinic[]> {
-    const { data } = await apiClient.get<unknown>(`/api/v1/clinics/status/${status}`)
-    return parseClinicList(data)
+  async getPageByStatus(status: 'ACTIVE' | 'INACTIVE', query: ClinicsQuery = {}): Promise<ClinicsPage> {
+    const page = query.page ?? 0
+    const size = query.size ?? DEFAULT_PAGE_SIZE
+    const { data } = await apiClient.get<unknown>(`/api/v1/clinics/status/${status}`, {
+      params: buildClinicsParams(query),
+    })
+    return parseClinicsPage(data, page, size)
   },
 
   async update(id: string | number, payload: ClinicPayload): Promise<Clinic> {

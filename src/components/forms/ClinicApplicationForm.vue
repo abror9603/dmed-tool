@@ -3,7 +3,6 @@ import { computed, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   Building2,
-  ChevronDown,
   Eye,
   EyeOff,
   Loader2,
@@ -12,6 +11,7 @@ import {
   Send,
   User,
 } from 'lucide-vue-next'
+import AppSelect from '../ui/AppSelect.vue'
 import type { ApplicationApplyPayload } from '../../services/clinic-applications'
 import { CLINIC_TYPES, type ClinicType } from '../../types/clinic.types'
 import {
@@ -233,26 +233,20 @@ defineExpose({ resetForm })
         <label for="clinicType" class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
           {{ t('registration.clinicType') }}
         </label>
-        <div class="relative">
-          <select
-            id="clinicType"
-            v-model="form.clinicType"
-            required
-            class="w-full appearance-none rounded-xl border border-slate-200 bg-white py-3 pl-4 pr-11 text-sm outline-none transition-colors focus:border-brand-primary dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-100"
-            :class="fieldErrors.clinicType ? 'border-red-400' : ''"
-            :disabled="props.loading"
-            @blur="touched.clinicType = true"
-          >
-            <option value="" disabled>{{ t('registration.clinicTypePlaceholder') }}</option>
-            <option v-for="type in REGISTRATION_TYPES" :key="type" :value="type">
-              {{ t(`registration.clinicTypes.${type}`) }}
-            </option>
-          </select>
-          <ChevronDown
-            class="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500"
-            aria-hidden="true"
-          />
-        </div>
+        <AppSelect
+          id="clinicType"
+          v-model="form.clinicType"
+          variant="default"
+          required
+          :invalid="Boolean(fieldErrors.clinicType)"
+          :disabled="props.loading"
+          @blur="touched.clinicType = true"
+        >
+          <option value="" disabled>{{ t('registration.clinicTypePlaceholder') }}</option>
+          <option v-for="type in REGISTRATION_TYPES" :key="type" :value="type">
+            {{ t(`registration.clinicTypes.${type}`) }}
+          </option>
+        </AppSelect>
         <p v-if="fieldErrors.clinicType" class="text-xs text-red-500">{{ fieldErrors.clinicType }}</p>
       </div>
 

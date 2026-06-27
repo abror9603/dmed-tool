@@ -1,3 +1,9 @@
+/**
+ * Application router and navigation guards.
+ *
+ * Route modules are lazy-loaded to keep the initial bundle small.
+ * Auth is enforced via `meta.requiresAuth` / `meta.guestOnly` rather than per-route checks.
+ */
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 
@@ -11,8 +17,6 @@ const AdminDashboardView = () => import('../views/admin/AdminDashboardView.vue')
 const AdminApplicationsView = () => import('../views/admin/AdminApplicationsView.vue')
 const AdminClinicsView = () => import('../views/admin/AdminClinicsView.vue')
 const AdminUsersView = () => import('../views/admin/AdminUsersView.vue')
-const AdminMedicalEventsView = () => import('../views/admin/AdminMedicalEventsView.vue')
-const AdminLabIntakeView = () => import('../views/admin/AdminLabIntakeView.vue')
 const AdminSettingsView = () => import('../views/admin/AdminSettingsView.vue')
 
 export const ROUTE_NAMES = {
@@ -24,8 +28,6 @@ export const ROUTE_NAMES = {
   ADMIN_APPLICATIONS: 'admin-applications',
   ADMIN_CLINICS: 'admin-clinics',
   ADMIN_USERS: 'admin-users',
-  ADMIN_MEDICAL_EVENTS: 'admin-medical-events',
-  ADMIN_LAB_INTAKE: 'admin-lab-intake',
   ADMIN_SETTINGS: 'admin-settings',
   /** @deprecated Use ADMIN_CLINICS */
   CLINICS: 'admin-clinics',
@@ -91,16 +93,6 @@ const router = createRouter({
           component: AdminUsersView,
         },
         {
-          path: 'medical-events',
-          name: ROUTE_NAMES.ADMIN_MEDICAL_EVENTS,
-          component: AdminMedicalEventsView,
-        },
-        {
-          path: 'lab-intake',
-          name: ROUTE_NAMES.ADMIN_LAB_INTAKE,
-          component: AdminLabIntakeView,
-        },
-        {
           path: 'settings',
           name: ROUTE_NAMES.ADMIN_SETTINGS,
           component: AdminSettingsView,
@@ -126,6 +118,7 @@ const router = createRouter({
 
 router.beforeEach((to) => {
   const authStore = useAuthStore()
+  // Rehydrate Pinia from localStorage before evaluating guards (handles F5 on /admin/*).
   authStore.syncFromSession()
 
   if (to.matched.some((record) => record.meta.requiresAuth) && !authStore.isAuthenticated) {

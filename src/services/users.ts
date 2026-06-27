@@ -1,4 +1,6 @@
 import { apiClient } from './http'
+import { buildPageResult } from './api-page'
+import { DEFAULT_PAGE_SIZE } from '../utils/pagination'
 
 export type AccountType = 'ADMIN' | 'DOCTOR' | 'OPERATOR'
 
@@ -88,29 +90,19 @@ function parseUsersList(data: unknown): User[] {
 }
 
 function parseUsersPage(data: unknown, page: number, size: number): UsersPage {
-  const users = parseUsersList(data)
-  let total = users.length
-
-  if (data && typeof data === 'object') {
-    const root = data as ApiEnvelope<unknown>
-    const obj = root.object
-    if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
-      const pageObj = obj as Record<string, unknown>
-      if (typeof pageObj.totalElements === 'number') {
-        total = pageObj.totalElements
-      } else if (typeof pageObj.total === 'number') {
-        total = pageObj.total
-      }
-    }
+  const result = buildPageResult(parseUsersList(data), data, page, size)
+  return {
+    users: result.items,
+    total: result.total,
+    page: result.page,
+    size: result.size,
   }
-
-  return { users, total, page, size }
 }
 
 function buildUsersParams(query: UsersQuery = {}): Record<string, string | number> {
   const params: Record<string, string | number> = {
     page: query.page ?? 0,
-    size: query.size ?? 30,
+    size: query.size ?? DEFAULT_PAGE_SIZE,
   }
 
   if (query.accountType) params.accountType = query.accountType
@@ -157,7 +149,7 @@ function parseActionResponse(data: unknown): void {
 export const usersService = {
   async getAll(query: UsersQuery = {}): Promise<UsersPage> {
     const page = query.page ?? 0
-    const size = query.size ?? 30
+    const size = query.size ?? DEFAULT_PAGE_SIZE
     const { data } = await apiClient.get<unknown>('/api/v1/users', {
       params: buildUsersParams(query),
     })

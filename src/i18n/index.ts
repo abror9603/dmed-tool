@@ -1,3 +1,7 @@
+/**
+ * i18n bootstrap — Composition API mode (`legacy: false`).
+ * Default and fallback locale is Uzbek; persisted in localStorage.
+ */
 import { createI18n } from 'vue-i18n'
 import uz from './locales/uz'
 import ru from './locales/ru'
